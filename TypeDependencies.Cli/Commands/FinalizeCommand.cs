@@ -56,10 +56,14 @@ namespace TypeDependencies.Cli.Commands
 
         private Task<int> HandleAsync(ParseResult parseResult, CancellationToken cancellationToken)
         {
-            Option<string> formatOption = parseResult.CommandResult.Command.Options.OfType<Option<string>>().FirstOrDefault(o => o.Name == "--format")
-                ?? throw new InvalidOperationException("Format option not found");
-            Option<string> outputOption = parseResult.CommandResult.Command.Options.OfType<Option<string>>().FirstOrDefault(o => o.Name == "--output")
-                ?? throw new InvalidOperationException("Output option not found");
+            Option<string>? formatOption = parseResult.CommandResult.Command.Options.OfType<Option<string>>().FirstOrDefault(o => o.Name == "format");
+            Option<string>? outputOption = parseResult.CommandResult.Command.Options.OfType<Option<string>>().FirstOrDefault(o => o.Name == "output");
+
+            if (formatOption == null || outputOption == null)
+            {
+                Console.Error.WriteLine("Error: Internal error - command options not properly configured.");
+                return Task.FromResult(1);
+            }
 
             string? format = parseResult.GetValue(formatOption);
             string? outputPath = parseResult.GetValue(outputOption);
