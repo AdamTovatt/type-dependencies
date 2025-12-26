@@ -33,7 +33,7 @@ namespace TypeDependencies.Cli.Commands
 
         private Task<int> HandleAsync(ParseResult parseResult, CancellationToken cancellationToken)
         {
-            Argument<string> dllPathArgument = parseResult.CommandResult.Command.Arguments.OfType<Argument<string>>().FirstOrDefault() 
+            Argument<string> dllPathArgument = parseResult.CommandResult.Command.Arguments.OfType<Argument<string>>().FirstOrDefault()
                 ?? throw new InvalidOperationException("DLL path argument not found");
 
             string? dllPath = parseResult.GetValue(dllPathArgument);

@@ -4,7 +4,6 @@ using TypeDependencies.Cli.Commands;
 using TypeDependencies.Core.Analysis;
 using TypeDependencies.Core.Export;
 using TypeDependencies.Core.State;
-using Xunit;
 
 namespace TypeDependencies.Tests.Integration
 {
@@ -20,7 +19,7 @@ namespace TypeDependencies.Tests.Integration
             RootCommand rootCommand = new RootCommand();
             rootCommand.Subcommands.Add(command);
 
-            int exitCode = rootCommand.Invoke("finalize");
+            int exitCode = rootCommand.Parse(new[] { "finalize" }).Invoke();
 
             exitCode.Should().Be(1);
         }
@@ -36,7 +35,7 @@ namespace TypeDependencies.Tests.Integration
             RootCommand rootCommand = new RootCommand();
             rootCommand.Subcommands.Add(command);
 
-            int exitCode = rootCommand.Invoke("finalize");
+            int exitCode = rootCommand.Parse(new[] { "finalize" }).Invoke();
 
             exitCode.Should().Be(1);
         }

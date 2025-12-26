@@ -2,7 +2,6 @@ using FluentAssertions;
 using System.CommandLine;
 using TypeDependencies.Cli.Commands;
 using TypeDependencies.Core.State;
-using Xunit;
 
 namespace TypeDependencies.Tests.Integration
 {
@@ -16,7 +15,7 @@ namespace TypeDependencies.Tests.Integration
             RootCommand rootCommand = new RootCommand();
             rootCommand.Subcommands.Add(command);
 
-            int exitCode = rootCommand.Invoke("add", @"C:\Test\Test.dll");
+            int exitCode = rootCommand.Parse(new[] { "add", @"C:\Test\Test.dll" }).Invoke();
 
             exitCode.Should().Be(1);
         }
@@ -30,7 +29,7 @@ namespace TypeDependencies.Tests.Integration
             RootCommand rootCommand = new RootCommand();
             rootCommand.Subcommands.Add(command);
 
-            int exitCode = rootCommand.Invoke("add", @"C:\NonExistent\File.dll");
+            int exitCode = rootCommand.Parse(new[] { "add", @"C:\NonExistent\File.dll" }).Invoke();
 
             exitCode.Should().Be(1);
         }

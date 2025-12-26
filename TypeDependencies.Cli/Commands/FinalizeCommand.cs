@@ -89,7 +89,7 @@ namespace TypeDependencies.Cli.Commands
                 {
                     Console.WriteLine($"Analyzing: {dllPath}");
                     DependencyGraph graph = _typeAnalyzer.AnalyzeAssembly(dllPath);
-                    
+
                     // Merge graphs
                     foreach (KeyValuePair<string, HashSet<string>> entry in graph.Dependencies)
                     {
@@ -119,10 +119,10 @@ namespace TypeDependencies.Cli.Commands
             {
                 exportStrategy.Export(combinedGraph, outputPath);
                 Console.WriteLine($"Dependency graph exported to: {outputPath}");
-                
+
                 // Clean up session
                 _stateManager.ClearSession(sessionId);
-                
+
                 return Task.FromResult(0);
             }
             catch (Exception ex)

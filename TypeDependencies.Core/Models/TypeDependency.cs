@@ -1,31 +1,31 @@
 namespace TypeDependencies.Core.Models
 {
     public class TypeDependency
-{
-    public string TypeName { get; }
-    public HashSet<string> Dependencies { get; }
-
-    public TypeDependency(string typeName)
     {
-        TypeName = typeName ?? throw new ArgumentNullException(nameof(typeName));
-        Dependencies = new HashSet<string>();
-    }
+        public string TypeName { get; }
+        public HashSet<string> Dependencies { get; }
 
-    public void AddDependency(string dependencyTypeName)
-    {
-        if (!string.IsNullOrWhiteSpace(dependencyTypeName))
+        public TypeDependency(string typeName)
         {
-            Dependencies.Add(dependencyTypeName);
+            TypeName = typeName ?? throw new ArgumentNullException(nameof(typeName));
+            Dependencies = new HashSet<string>();
         }
-    }
 
-    public void AddDependencies(IEnumerable<string> dependencyTypeNames)
-    {
-        foreach (string dependencyTypeName in dependencyTypeNames)
+        public void AddDependency(string dependencyTypeName)
         {
-            AddDependency(dependencyTypeName);
+            if (!string.IsNullOrWhiteSpace(dependencyTypeName))
+            {
+                Dependencies.Add(dependencyTypeName);
+            }
         }
-    }
+
+        public void AddDependencies(IEnumerable<string> dependencyTypeNames)
+        {
+            foreach (string dependencyTypeName in dependencyTypeNames)
+            {
+                AddDependency(dependencyTypeName);
+            }
+        }
     }
 }
 

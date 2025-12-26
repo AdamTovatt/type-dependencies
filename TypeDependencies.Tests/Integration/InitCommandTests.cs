@@ -2,7 +2,6 @@ using FluentAssertions;
 using System.CommandLine;
 using TypeDependencies.Cli.Commands;
 using TypeDependencies.Core.State;
-using Xunit;
 
 namespace TypeDependencies.Tests.Integration
 {
@@ -16,7 +15,7 @@ namespace TypeDependencies.Tests.Integration
             RootCommand rootCommand = new RootCommand();
             rootCommand.Subcommands.Add(command);
 
-            int exitCode = rootCommand.Invoke("init");
+            int exitCode = rootCommand.Parse(new[] { "init" }).Invoke();
 
             exitCode.Should().Be(0);
         }

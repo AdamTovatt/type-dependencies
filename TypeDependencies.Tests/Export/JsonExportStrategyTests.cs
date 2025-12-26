@@ -2,7 +2,6 @@ using FluentAssertions;
 using System.Text.Json;
 using TypeDependencies.Core.Export;
 using TypeDependencies.Core.Models;
-using Xunit;
 
 namespace TypeDependencies.Tests.Export
 {
@@ -25,7 +24,7 @@ namespace TypeDependencies.Tests.Export
                 File.Exists(tempFile).Should().BeTrue();
                 string content = File.ReadAllText(tempFile);
                 Dictionary<string, List<string>>? data = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(content);
-                
+
                 data.Should().NotBeNull();
                 data.Should().ContainKey("TypeA");
                 data["TypeA"].Should().Contain("TypeB");
@@ -56,7 +55,7 @@ namespace TypeDependencies.Tests.Export
 
                 string content = File.ReadAllText(tempFile);
                 Dictionary<string, List<string>>? data = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(content);
-                
+
                 data.Should().NotBeNull();
                 List<string> dependencies = data!["TypeA"];
                 dependencies.Should().BeInAscendingOrder();

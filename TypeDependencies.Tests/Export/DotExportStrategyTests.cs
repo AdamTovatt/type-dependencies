@@ -1,7 +1,6 @@
 using FluentAssertions;
 using TypeDependencies.Core.Export;
 using TypeDependencies.Core.Models;
-using Xunit;
 
 namespace TypeDependencies.Tests.Export
 {

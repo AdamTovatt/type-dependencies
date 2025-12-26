@@ -1,8 +1,8 @@
+using System.CommandLine;
 using TypeDependencies.Cli.Commands;
 using TypeDependencies.Core.Analysis;
 using TypeDependencies.Core.Export;
 using TypeDependencies.Core.State;
-using System.CommandLine;
 
 namespace TypeDependencies.Cli
 {
