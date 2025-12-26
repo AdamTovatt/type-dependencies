@@ -1,6 +1,6 @@
 # TypeDependencies
 
-A command-line tool for analyzing and visualizing type dependencies in C# assemblies. Extract dependency graphs from compiled DLLs and export them in DOT (Graphviz) or JSON format.
+A command-line tool for analyzing and visualizing type dependencies in C# assemblies. Extract dependency graphs from compiled DLLs and export them in DOT (Graphviz), JSON, Mermaid, or HTML format.
 
 ## Installation
 
@@ -61,12 +61,19 @@ type-dep finalize --format json
 type-dep finalize --format mermaid
 ```
 
+**HTML format:**
+```bash
+type-dep finalize --format html
+```
+
+This creates an interactive HTML visualization that can be opened in any web browser.
+
 **Custom output path:**
 ```bash
 type-dep finalize --output my-dependencies.json
 ```
 
-By default, the output file is saved to the current working directory as `type-dependencies.dot` (or `type-dependencies.json` for JSON format, or `type-dependencies.mmd` for Mermaid format).
+By default, the output file is saved to the current working directory as `type-dependencies.dot` (or `type-dependencies.json` for JSON format, `type-dependencies.mmd` for Mermaid format, or `type-dependencies.html` for HTML format).
 
 ### Example
 

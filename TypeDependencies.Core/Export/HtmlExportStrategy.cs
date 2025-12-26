@@ -14,7 +14,7 @@ namespace TypeDependencies.Core.Export
         {
             _jsonSerializerOptions = new JsonSerializerOptions
             {
-                WriteIndented = true,
+                WriteIndented = false,
             };
         }
 
@@ -35,19 +35,20 @@ namespace TypeDependencies.Core.Export
             // Read the HTML template
             string template = _resourceManager.ReadAsStringAsync(Resources.HtmlTemplate).GetAwaiter().GetResult();
 
-            // Convert dependency graph to dictionary for JSON serialization
-            Dictionary<string, List<string>> graphData = new Dictionary<string, List<string>>();
-            foreach (KeyValuePair<string, HashSet<string>> entry in dependencyGraph.Dependencies)
-            {
-                graphData[entry.Key] = entry.Value.OrderBy(x => x).ToList();
-            }
+            // Convert dependency graph to template data format
+            HtmlTemplateDataConverter converter = new HtmlTemplateDataConverter();
+            TemplateData templateData = converter.Convert(dependencyGraph);
 
-            // Serialize to JSON
-            string jsonData = JsonSerializer.Serialize(graphData, _jsonSerializerOptions);
+            // Serialize to JSON with indentation (as shown in the working example)
+            JsonSerializerOptions indentedOptions = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+            };
+            string jsonData = JsonSerializer.Serialize(templateData, indentedOptions);
 
             // Replace tokens in template
             string html = template
-                .Replace("'{#SOURCE_TOKEN#}'", $"'{jsonData}'")
+                .Replace("{#SOURCE_TOKEN#}", jsonData)
                 .Replace("{#TITLE_TOKEN#}", WebUtility.HtmlEncode("Type Dependencies"));
 
             // Write to file
