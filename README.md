@@ -115,7 +115,35 @@ type-dep query dependents <=1        # Types with 1 or fewer dependents
 type-dep query dependents 2-10       # Types with between 2 and 10 dependents (inclusive)
 ```
 
-All query results are output one type per line, sorted alphabetically.
+**Filter types by dependency count (outgoing dependencies):**
+```bash
+type-dep query dependencies 0          # Types with no dependencies (leaf nodes)
+type-dep query dependencies >5         # Types that depend on more than 5 types
+type-dep query dependencies >=3        # Types with 3 or more dependencies
+type-dep query dependencies <2         # Types with less than 2 dependencies
+type-dep query dependencies <=1        # Types with 1 or fewer dependencies
+type-dep query dependencies 2-10       # Types with between 2 and 10 dependencies (inclusive)
+```
+
+**Find transitive dependencies (recursive):**
+```bash
+type-dep query transitive-dependencies-of MyNamespace.MyType
+```
+This returns all types that the specified type depends on, directly and indirectly, following the entire dependency chain.
+
+**Find transitive dependents (recursive):**
+```bash
+type-dep query transitive-dependents-of MyNamespace.MyType
+```
+This returns all types that depend on the specified type, directly and indirectly, following the entire dependency chain in reverse.
+
+**Detect circular dependencies:**
+```bash
+type-dep query circular-dependencies
+```
+This finds and lists all circular dependency cycles in the graph. Each cycle is displayed as a chain of type names connected by arrows (e.g., `TypeA -> TypeB -> TypeC -> TypeA`).
+
+All query results are output one type per line, sorted alphabetically (except circular dependencies which show the cycle path).
 
 ### Example
 

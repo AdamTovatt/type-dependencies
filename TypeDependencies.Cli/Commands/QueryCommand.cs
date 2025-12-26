@@ -63,9 +63,60 @@ namespace TypeDependencies.Cli.Commands
                 return handler.HandleDependentsAsync(parseResult, cancellationToken);
             });
 
+            // Subcommand: dependencies
+            Argument<string> dependenciesArgument = new Argument<string>("count-expression")
+            {
+                Description = "Count expression (e.g., 5, >5, >=5, <5, <=5, 2-10)",
+            };
+            Command dependenciesCommand = new Command("dependencies", "Find types with a specific dependency count");
+            dependenciesCommand.Arguments.Add(dependenciesArgument);
+            dependenciesCommand.SetAction((parseResult, cancellationToken) =>
+            {
+                QueryCommand handler = new QueryCommand(stateManager, sessionFinder);
+                return handler.HandleDependenciesAsync(parseResult, cancellationToken);
+            });
+
+            // Subcommand: transitive-dependencies-of
+            Argument<string> transitiveDependenciesOfArgument = new Argument<string>("type-name")
+            {
+                Description = "Type name to find transitive dependencies for",
+            };
+            Command transitiveDependenciesOfCommand = new Command("transitive-dependencies-of", "Find all types that a type depends on (recursively)");
+            transitiveDependenciesOfCommand.Arguments.Add(transitiveDependenciesOfArgument);
+            transitiveDependenciesOfCommand.SetAction((parseResult, cancellationToken) =>
+            {
+                QueryCommand handler = new QueryCommand(stateManager, sessionFinder);
+                return handler.HandleTransitiveDependenciesOfAsync(parseResult, cancellationToken);
+            });
+
+            // Subcommand: transitive-dependents-of
+            Argument<string> transitiveDependentsOfArgument = new Argument<string>("type-name")
+            {
+                Description = "Type name to find transitive dependents for",
+            };
+            Command transitiveDependentsOfCommand = new Command("transitive-dependents-of", "Find all types that depend on a type (recursively)");
+            transitiveDependentsOfCommand.Arguments.Add(transitiveDependentsOfArgument);
+            transitiveDependentsOfCommand.SetAction((parseResult, cancellationToken) =>
+            {
+                QueryCommand handler = new QueryCommand(stateManager, sessionFinder);
+                return handler.HandleTransitiveDependentsOfAsync(parseResult, cancellationToken);
+            });
+
+            // Subcommand: circular-dependencies
+            Command circularDependenciesCommand = new Command("circular-dependencies", "Find all circular dependency cycles");
+            circularDependenciesCommand.SetAction((parseResult, cancellationToken) =>
+            {
+                QueryCommand handler = new QueryCommand(stateManager, sessionFinder);
+                return handler.HandleCircularDependenciesAsync(parseResult, cancellationToken);
+            });
+
             queryCommand.Subcommands.Add(dependentsOfCommand);
             queryCommand.Subcommands.Add(dependenciesOfCommand);
             queryCommand.Subcommands.Add(dependentsCommand);
+            queryCommand.Subcommands.Add(dependenciesCommand);
+            queryCommand.Subcommands.Add(transitiveDependenciesOfCommand);
+            queryCommand.Subcommands.Add(transitiveDependentsOfCommand);
+            queryCommand.Subcommands.Add(circularDependenciesCommand);
 
             return queryCommand;
         }
@@ -256,6 +307,214 @@ namespace TypeDependencies.Cli.Commands
             if (int.TryParse(expression, out int count))
             {
                 return executor.GetTypesWithDependentCount(count);
+            }
+
+            return null;
+        }
+
+        private Task<int> HandleDependenciesAsync(ParseResult parseResult, CancellationToken cancellationToken)
+        {
+            Argument<string>? argument = parseResult.CommandResult.Command.Arguments.OfType<Argument<string>>().FirstOrDefault();
+            if (argument == null)
+            {
+                Console.Error.WriteLine("Error: Internal error - command argument not properly configured.");
+                return Task.FromResult(1);
+            }
+
+            string? countExpression = parseResult.GetValue(argument);
+            if (string.IsNullOrWhiteSpace(countExpression))
+            {
+                Console.Error.WriteLine("Error: Count expression cannot be empty.");
+                return Task.FromResult(1);
+            }
+
+            DependencyGraph? graph = LoadGraph();
+            if (graph == null)
+                return Task.FromResult(1);
+
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+            HashSet<string>? result = ParseAndExecuteDependenciesQuery(executor, countExpression);
+
+            if (result == null)
+            {
+                Console.Error.WriteLine($"Error: Invalid count expression '{countExpression}'. Expected format: number, >number, >=number, <number, <=number, or min-max.");
+                return Task.FromResult(1);
+            }
+
+            if (result.Count == 0)
+            {
+                Console.WriteLine("No types match the specified criteria.");
+                return Task.FromResult(0);
+            }
+
+            foreach (string typeName in result.OrderBy(x => x))
+            {
+                Console.WriteLine(typeName);
+            }
+
+            return Task.FromResult(0);
+        }
+
+        private Task<int> HandleTransitiveDependenciesOfAsync(ParseResult parseResult, CancellationToken cancellationToken)
+        {
+            Argument<string>? argument = parseResult.CommandResult.Command.Arguments.OfType<Argument<string>>().FirstOrDefault();
+            if (argument == null)
+            {
+                Console.Error.WriteLine("Error: Internal error - command argument not properly configured.");
+                return Task.FromResult(1);
+            }
+
+            string? typeName = parseResult.GetValue(argument);
+            if (string.IsNullOrWhiteSpace(typeName))
+            {
+                Console.Error.WriteLine("Error: Type name cannot be empty.");
+                return Task.FromResult(1);
+            }
+
+            DependencyGraph? graph = LoadGraph();
+            if (graph == null)
+                return Task.FromResult(1);
+
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+            HashSet<string> transitiveDependencies = executor.GetTransitiveDependenciesOf(typeName);
+
+            if (transitiveDependencies.Count == 0)
+            {
+                Console.WriteLine($"Type '{typeName}' has no transitive dependencies.");
+                return Task.FromResult(0);
+            }
+
+            foreach (string dependency in transitiveDependencies.OrderBy(x => x))
+            {
+                Console.WriteLine(dependency);
+            }
+
+            return Task.FromResult(0);
+        }
+
+        private Task<int> HandleTransitiveDependentsOfAsync(ParseResult parseResult, CancellationToken cancellationToken)
+        {
+            Argument<string>? argument = parseResult.CommandResult.Command.Arguments.OfType<Argument<string>>().FirstOrDefault();
+            if (argument == null)
+            {
+                Console.Error.WriteLine("Error: Internal error - command argument not properly configured.");
+                return Task.FromResult(1);
+            }
+
+            string? typeName = parseResult.GetValue(argument);
+            if (string.IsNullOrWhiteSpace(typeName))
+            {
+                Console.Error.WriteLine("Error: Type name cannot be empty.");
+                return Task.FromResult(1);
+            }
+
+            DependencyGraph? graph = LoadGraph();
+            if (graph == null)
+                return Task.FromResult(1);
+
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+            HashSet<string> transitiveDependents = executor.GetTransitiveDependentsOf(typeName);
+
+            if (transitiveDependents.Count == 0)
+            {
+                Console.WriteLine($"No types transitively depend on '{typeName}'.");
+                return Task.FromResult(0);
+            }
+
+            foreach (string dependent in transitiveDependents.OrderBy(x => x))
+            {
+                Console.WriteLine(dependent);
+            }
+
+            return Task.FromResult(0);
+        }
+
+        private Task<int> HandleCircularDependenciesAsync(ParseResult parseResult, CancellationToken cancellationToken)
+        {
+            DependencyGraph? graph = LoadGraph();
+            if (graph == null)
+                return Task.FromResult(1);
+
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+            List<List<string>> cycles = executor.GetCircularDependencies();
+
+            if (cycles.Count == 0)
+            {
+                Console.WriteLine("No circular dependencies found.");
+                return Task.FromResult(0);
+            }
+
+            foreach (List<string> cycle in cycles)
+            {
+                Console.WriteLine(string.Join(" -> ", cycle));
+            }
+
+            return Task.FromResult(0);
+        }
+
+        private HashSet<string>? ParseAndExecuteDependenciesQuery(IDependencyGraphQueryExecutor executor, string expression)
+        {
+            expression = expression.Trim();
+
+            // Range: min-max
+            if (expression.Contains('-'))
+            {
+                string[] parts = expression.Split('-', 2);
+                if (parts.Length == 2 && int.TryParse(parts[0].Trim(), out int min) && int.TryParse(parts[1].Trim(), out int max))
+                {
+                    return executor.GetTypesWithDependencyCountRange(min, max);
+                }
+                return null;
+            }
+
+            // Greater than or equal: >=number
+            if (expression.StartsWith(">=", StringComparison.OrdinalIgnoreCase))
+            {
+                string numberPart = expression.Substring(2).Trim();
+                if (int.TryParse(numberPart, out int min))
+                {
+                    return executor.GetTypesWithDependencyCountGreaterThanOrEqual(min);
+                }
+                return null;
+            }
+
+            // Less than or equal: <=number
+            if (expression.StartsWith("<=", StringComparison.OrdinalIgnoreCase))
+            {
+                string numberPart = expression.Substring(2).Trim();
+                if (int.TryParse(numberPart, out int max))
+                {
+                    return executor.GetTypesWithDependencyCountLessThanOrEqual(max);
+                }
+                return null;
+            }
+
+            // Greater than: >number
+            if (expression.StartsWith(">", StringComparison.OrdinalIgnoreCase))
+            {
+                string numberPart = expression.Substring(1).Trim();
+                if (int.TryParse(numberPart, out int min))
+                {
+                    return executor.GetTypesWithDependencyCountGreaterThan(min);
+                }
+                return null;
+            }
+
+            // Less than: <number
+            if (expression.StartsWith("<", StringComparison.OrdinalIgnoreCase))
+            {
+                string numberPart = expression.Substring(1).Trim();
+                if (int.TryParse(numberPart, out int max))
+                {
+                    return executor.GetTypesWithDependencyCountLessThan(max);
+                }
+                return null;
+            }
+
+            // Exact: number
+            if (int.TryParse(expression, out int count))
+            {
+                return executor.GetTypesWithDependencyCount(count);
             }
 
             return null;

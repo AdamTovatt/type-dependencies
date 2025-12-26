@@ -419,6 +419,426 @@ namespace TypeDependencies.Tests.Query
             result.Should().Contain("TypeB"); // TypeB has exactly 2 dependents
             result.Should().NotContain("TypeE"); // TypeE has 1 dependent, not 2
         }
+
+        [Fact]
+        public void GetTypesWithDependencyCount_ShouldReturnExactMatches()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeA", "TypeC");
+            graph.AddDependency("TypeD", "TypeE");
+            graph.AddDependency("TypeD", "TypeF");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTypesWithDependencyCount(2);
+
+            result.Should().HaveCount(2);
+            result.Should().Contain("TypeA");
+            result.Should().Contain("TypeD");
+        }
+
+        [Fact]
+        public void GetTypesWithDependencyCount_ShouldReturnEmptyWhenNoMatches()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTypesWithDependencyCount(5);
+
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void GetTypesWithDependencyCount_ShouldReturnTypesWithZeroDependencies()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeC", "TypeD");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTypesWithDependencyCount(0);
+
+            result.Should().Contain("TypeB");
+            result.Should().Contain("TypeD");
+            result.Should().NotContain("TypeA");
+            result.Should().NotContain("TypeC");
+        }
+
+        [Fact]
+        public void GetTypesWithDependencyCountGreaterThan_ShouldReturnCorrectTypes()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeA", "TypeC");
+            graph.AddDependency("TypeA", "TypeD");
+            graph.AddDependency("TypeE", "TypeF");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTypesWithDependencyCountGreaterThan(2);
+
+            result.Should().Contain("TypeA");
+            result.Should().NotContain("TypeE");
+        }
+
+        [Fact]
+        public void GetTypesWithDependencyCountGreaterThanOrEqual_ShouldReturnCorrectTypes()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeA", "TypeC");
+            graph.AddDependency("TypeD", "TypeE");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTypesWithDependencyCountGreaterThanOrEqual(2);
+
+            result.Should().Contain("TypeA");
+            result.Should().NotContain("TypeD");
+        }
+
+        [Fact]
+        public void GetTypesWithDependencyCountLessThan_ShouldReturnCorrectTypes()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeA", "TypeC");
+            graph.AddDependency("TypeD", "TypeE");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTypesWithDependencyCountLessThan(2);
+
+            result.Should().Contain("TypeD");
+            result.Should().NotContain("TypeA");
+        }
+
+        [Fact]
+        public void GetTypesWithDependencyCountLessThanOrEqual_ShouldReturnCorrectTypes()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeA", "TypeC");
+            graph.AddDependency("TypeD", "TypeE");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTypesWithDependencyCountLessThanOrEqual(1);
+
+            result.Should().Contain("TypeD");
+            result.Should().NotContain("TypeA");
+        }
+
+        [Fact]
+        public void GetTypesWithDependencyCountRange_ShouldReturnCorrectTypes()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeA", "TypeC");
+            graph.AddDependency("TypeD", "TypeE");
+            graph.AddDependency("TypeF", "TypeG");
+            graph.AddDependency("TypeF", "TypeH");
+            graph.AddDependency("TypeF", "TypeI");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTypesWithDependencyCountRange(1, 2);
+
+            result.Should().Contain("TypeA");
+            result.Should().Contain("TypeD");
+            result.Should().NotContain("TypeF");
+        }
+
+        [Fact]
+        public void GetTransitiveDependenciesOf_ShouldReturnDirectDependencies()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeA", "TypeC");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependenciesOf("TypeA");
+
+            result.Should().HaveCount(2);
+            result.Should().Contain("TypeB");
+            result.Should().Contain("TypeC");
+            result.Should().NotContain("TypeA");
+        }
+
+        [Fact]
+        public void GetTransitiveDependenciesOf_ShouldReturnTransitiveDependencies()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeB", "TypeC");
+            graph.AddDependency("TypeC", "TypeD");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependenciesOf("TypeA");
+
+            result.Should().HaveCount(3);
+            result.Should().Contain("TypeB");
+            result.Should().Contain("TypeC");
+            result.Should().Contain("TypeD");
+            result.Should().NotContain("TypeA");
+        }
+
+        [Fact]
+        public void GetTransitiveDependenciesOf_ShouldHandleCycles()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeB", "TypeC");
+            graph.AddDependency("TypeC", "TypeA");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependenciesOf("TypeA");
+
+            result.Should().HaveCount(2);
+            result.Should().Contain("TypeB");
+            result.Should().Contain("TypeC");
+            result.Should().NotContain("TypeA");
+        }
+
+        [Fact]
+        public void GetTransitiveDependenciesOf_ShouldHandleMultiplePaths()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeA", "TypeC");
+            graph.AddDependency("TypeC", "TypeB");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependenciesOf("TypeA");
+
+            result.Should().HaveCount(2);
+            result.Should().Contain("TypeB");
+            result.Should().Contain("TypeC");
+        }
+
+        [Fact]
+        public void GetTransitiveDependenciesOf_ShouldReturnEmptyWhenTypeHasNoDependencies()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependenciesOf("TypeB");
+
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void GetTransitiveDependenciesOf_ShouldReturnEmptyForNullTypeName()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependenciesOf(null!);
+
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void GetTransitiveDependenciesOf_ShouldReturnEmptyForEmptyTypeName()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependenciesOf("");
+
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void GetTransitiveDependentsOf_ShouldReturnDirectDependents()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeC", "TypeB");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependentsOf("TypeB");
+
+            result.Should().HaveCount(2);
+            result.Should().Contain("TypeA");
+            result.Should().Contain("TypeC");
+            result.Should().NotContain("TypeB");
+        }
+
+        [Fact]
+        public void GetTransitiveDependentsOf_ShouldReturnTransitiveDependents()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeC", "TypeB");
+            graph.AddDependency("TypeB", "TypeA");
+            graph.AddDependency("TypeD", "TypeA");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependentsOf("TypeA");
+
+            result.Should().HaveCount(3);
+            result.Should().Contain("TypeB");
+            result.Should().Contain("TypeC");
+            result.Should().Contain("TypeD");
+            result.Should().NotContain("TypeA");
+        }
+
+        [Fact]
+        public void GetTransitiveDependentsOf_ShouldHandleCycles()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeB", "TypeC");
+            graph.AddDependency("TypeC", "TypeA");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependentsOf("TypeA");
+
+            result.Should().HaveCount(2);
+            result.Should().Contain("TypeB");
+            result.Should().Contain("TypeC");
+            result.Should().NotContain("TypeA");
+        }
+
+        [Fact]
+        public void GetTransitiveDependentsOf_ShouldHandleMultiplePaths()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeB", "TypeA");
+            graph.AddDependency("TypeC", "TypeA");
+            graph.AddDependency("TypeD", "TypeB");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependentsOf("TypeA");
+
+            result.Should().HaveCount(3);
+            result.Should().Contain("TypeB");
+            result.Should().Contain("TypeC");
+            result.Should().Contain("TypeD");
+        }
+
+        [Fact]
+        public void GetTransitiveDependentsOf_ShouldReturnEmptyWhenTypeHasNoDependents()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependentsOf("TypeA");
+
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void GetTransitiveDependentsOf_ShouldReturnEmptyForNullTypeName()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependentsOf(null!);
+
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void GetTransitiveDependentsOf_ShouldReturnEmptyForEmptyTypeName()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            HashSet<string> result = executor.GetTransitiveDependentsOf("");
+
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void GetCircularDependencies_ShouldReturnEmptyForGraphWithNoCycles()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeB", "TypeC");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            List<List<string>> cycles = executor.GetCircularDependencies();
+
+            cycles.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void GetCircularDependencies_ShouldDetectSimpleCycle()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeB", "TypeA");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            List<List<string>> cycles = executor.GetCircularDependencies();
+
+            cycles.Should().HaveCount(1);
+            cycles[0].Should().HaveCount(3);
+            cycles[0].Should().Contain("TypeA");
+            cycles[0].Should().Contain("TypeB");
+        }
+
+        [Fact]
+        public void GetCircularDependencies_ShouldDetectMultipleCycles()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeB", "TypeA");
+            graph.AddDependency("TypeC", "TypeD");
+            graph.AddDependency("TypeD", "TypeC");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            List<List<string>> cycles = executor.GetCircularDependencies();
+
+            cycles.Should().HaveCount(2);
+        }
+
+        [Fact]
+        public void GetCircularDependencies_ShouldDetectComplexCycle()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeB", "TypeC");
+            graph.AddDependency("TypeC", "TypeA");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            List<List<string>> cycles = executor.GetCircularDependencies();
+
+            cycles.Should().HaveCount(1);
+            cycles[0].Should().HaveCount(4);
+            cycles[0].Should().Contain("TypeA");
+            cycles[0].Should().Contain("TypeB");
+            cycles[0].Should().Contain("TypeC");
+        }
+
+        [Fact]
+        public void GetCircularDependencies_ShouldDetectNestedCycles()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeB", "TypeC");
+            graph.AddDependency("TypeC", "TypeB");
+            graph.AddDependency("TypeC", "TypeA");
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            List<List<string>> cycles = executor.GetCircularDependencies();
+
+            cycles.Should().HaveCountGreaterThan(0);
+        }
+
+        [Fact]
+        public void GetCircularDependencies_ShouldReturnEmptyForEmptyGraph()
+        {
+            DependencyGraph graph = new DependencyGraph();
+            IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
+
+            List<List<string>> cycles = executor.GetCircularDependencies();
+
+            cycles.Should().BeEmpty();
+        }
     }
 }
 
