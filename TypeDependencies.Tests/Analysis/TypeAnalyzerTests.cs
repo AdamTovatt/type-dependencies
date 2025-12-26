@@ -49,8 +49,64 @@ namespace TypeDependencies.Tests.Analysis
             DependencyGraph graph = analyzer.AnalyzeAssembly(coreDllPath);
 
             graph.Should().NotBeNull();
-            // Should have at least some dependencies
             graph.Dependencies.Count.Should().BeGreaterThan(0);
+
+            // Find TypeAnalyzer in the graph (might be with or without namespace prefix)
+            KeyValuePair<string, HashSet<string>>? typeAnalyzerEntry = graph.Dependencies
+                .FirstOrDefault(kvp => kvp.Key.Contains("TypeAnalyzer") && !kvp.Key.Contains("ITypeAnalyzer"));
+            typeAnalyzerEntry.Should().NotBe(default(KeyValuePair<string, HashSet<string>>), 
+                "TypeAnalyzer should be found in the dependency graph");
+
+            // TypeAnalyzer should depend on ITypeAnalyzer interface
+            typeAnalyzerEntry.Value.Value.Should().Contain(dep => dep.Contains("ITypeAnalyzer"),
+                "TypeAnalyzer should depend on ITypeAnalyzer interface");
+
+            // TypeAnalyzer should depend on DependencyGraph
+            typeAnalyzerEntry.Value.Value.Should().Contain(dep => dep.Contains("DependencyGraph"),
+                "TypeAnalyzer should depend on DependencyGraph");
+
+            // TypeAnalyzer uses Mono.Cecil types (AssemblyDefinition, TypeDefinition, etc.)
+            typeAnalyzerEntry.Value.Value.Should().Contain(dep => dep.Contains("Mono.Cecil"),
+                "TypeAnalyzer should depend on Mono.Cecil types");
+
+            // Find JsonExportStrategy in the graph
+            KeyValuePair<string, HashSet<string>>? jsonExportEntry = graph.Dependencies
+                .FirstOrDefault(kvp => kvp.Key.Contains("JsonExportStrategy"));
+            if (jsonExportEntry.Value.Key != null)
+            {
+                // JsonExportStrategy should depend on IExportStrategy interface
+                jsonExportEntry.Value.Value.Should().Contain(dep => dep.Contains("IExportStrategy"),
+                    "JsonExportStrategy should depend on IExportStrategy interface");
+                // JsonExportStrategy should depend on DependencyGraph
+                jsonExportEntry.Value.Value.Should().Contain(dep => dep.Contains("DependencyGraph"),
+                    "JsonExportStrategy should depend on DependencyGraph");
+            }
+
+            // Find DotExportStrategy in the graph
+            KeyValuePair<string, HashSet<string>>? dotExportEntry = graph.Dependencies
+                .FirstOrDefault(kvp => kvp.Key.Contains("DotExportStrategy"));
+            if (dotExportEntry.Value.Key != null)
+            {
+                // DotExportStrategy should depend on IExportStrategy interface
+                dotExportEntry.Value.Value.Should().Contain(dep => dep.Contains("IExportStrategy"),
+                    "DotExportStrategy should depend on IExportStrategy interface");
+                // DotExportStrategy should depend on DependencyGraph
+                dotExportEntry.Value.Value.Should().Contain(dep => dep.Contains("DependencyGraph"),
+                    "DotExportStrategy should depend on DependencyGraph");
+            }
+
+            // Find AnalysisStateManager in the graph
+            KeyValuePair<string, HashSet<string>>? stateManagerEntry = graph.Dependencies
+                .FirstOrDefault(kvp => kvp.Key.Contains("AnalysisStateManager"));
+            if (stateManagerEntry.Value.Key != null)
+            {
+                // AnalysisStateManager should depend on IAnalysisStateManager interface
+                stateManagerEntry.Value.Value.Should().Contain(dep => dep.Contains("IAnalysisStateManager"),
+                    "AnalysisStateManager should depend on IAnalysisStateManager interface");
+                // AnalysisStateManager should depend on AnalysisState
+                stateManagerEntry.Value.Value.Should().Contain(dep => dep.Contains("AnalysisState"),
+                    "AnalysisStateManager should depend on AnalysisState");
+            }
         }
     }
 }

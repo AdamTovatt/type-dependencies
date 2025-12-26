@@ -5,7 +5,25 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>TypeDependencies</Title>
+    <Authors>Adam Tovatt</Authors>
+    <PackAsTool>True</PackAsTool>
+    <ToolCommandName>type-dep</ToolCommandName>
+    <Description>Command-line tool for analyzing and visualizing type dependencies in C# assemblies</Description>
+    <PackageId>TypeDependencies</PackageId>
+    <Version>1.0.0</Version>
+    <PackageProjectUrl>https://github.com/AdamTovatt/type-dependencies</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AdamTovatt/type-dependencies</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>dotnet;cli;dependencies;analysis;mono-cecil;csharp</PackageTags>
+    <Copyright>Copyright © Adam Tovatt</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="0.11.6" />
