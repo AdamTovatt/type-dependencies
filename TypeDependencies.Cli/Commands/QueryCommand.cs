@@ -222,7 +222,7 @@ namespace TypeDependencies.Cli.Commands
                 return Task.FromResult(1);
 
             IDependencyGraphQueryExecutor executor = new DependencyGraphQueryExecutor(graph);
-            HashSet<string> result = ParseAndExecuteDependentsQuery(executor, countExpression);
+            HashSet<string>? result = ParseAndExecuteDependentsQuery(executor, countExpression);
 
             if (result == null)
             {

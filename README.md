@@ -1,6 +1,6 @@
 # TypeDependencies
 
-A command-line tool for analyzing and visualizing type dependencies in C# assemblies. Extract dependency graphs from compiled DLLs and export them in DOT (Graphviz), JSON, Mermaid, or HTML format.
+A command-line tool for analyzing and visualizing type dependencies in C# assemblies. Extract dependency graphs from compiled DLLs and export them in DOT (Graphviz), JSON, Mermaid, or HTML format. Works as both a CLI tool and an MCP (Model Context Protocol) server for AI agents.
 
 ## Installation
 
@@ -144,6 +144,64 @@ type-dep query circular-dependencies
 This finds and lists all circular dependency cycles in the graph. Each cycle is displayed as a chain of type names connected by arrows (e.g., `TypeA -> TypeB -> TypeC -> TypeA`).
 
 All query results are output one type per line, sorted alphabetically (except circular dependencies which show the cycle path).
+
+### MCP Server Mode
+
+TypeDependencies can also run as an MCP server, making it available to AI agents through the Model Context Protocol.
+
+**Run as MCP server:**
+```bash
+type-dep --mcp
+```
+
+Or using dotnet run during development:
+```bash
+dotnet run --project TypeDependencies.Cli/TypeDependencies.Cli.csproj -- --mcp
+```
+
+#### MCP Configuration
+
+Add to your MCP client configuration (e.g., Cursor IDE):
+
+```json
+{
+  "mcpServers": {
+    "typedependencies": {
+      "command": "type-dep",
+      "args": ["--mcp"]
+    }
+  }
+}
+```
+
+#### Available MCP Tools
+
+When running as an MCP server, the following tools are available:
+
+**Session Management:**
+- `td_init()` - Initialize a new analysis session
+
+**DLL Management:**
+- `td_add(dllPath: string)` - Add a DLL to the current session
+
+**Graph Generation:**
+- `td_generate()` - Generate dependency graph from added DLLs
+
+**Export:**
+- `td_export(format?: string, outputPath?: string)` - Export the generated graph
+  - `format`: "dot", "json", "mermaid", or "html" (defaults to "dot")
+  - `outputPath`: Optional file path (defaults to `type-dependencies.{ext}` in current directory)
+
+**Query Tools:**
+- `td_query_dependents_of(typeName: string)` - Find types that depend on a type
+- `td_query_dependencies_of(typeName: string)` - Find types a type depends on
+- `td_query_dependents(countExpression: string)` - Filter by dependent count (supports: number, >number, >=number, <number, <=number, min-max)
+- `td_query_dependencies(countExpression: string)` - Filter by dependency count (supports: number, >number, >=number, <number, <=number, min-max)
+- `td_query_transitive_dependencies_of(typeName: string)` - Find recursive dependencies
+- `td_query_transitive_dependents_of(typeName: string)` - Find recursive dependents
+- `td_query_circular_dependencies()` - Detect circular dependencies
+
+All MCP tools return string responses with success messages or error descriptions.
 
 ### Example
 
