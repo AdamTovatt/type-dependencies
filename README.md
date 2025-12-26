@@ -2,6 +2,18 @@
 
 A command-line tool for analyzing and visualizing type dependencies in C# assemblies. Extract dependency graphs from compiled DLLs and export them in DOT (Graphviz), JSON, Mermaid, or HTML format. Works as both a CLI tool and an MCP (Model Context Protocol) server for AI agents.
 
+## Table of Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Basic Workflow](#basic-workflow)
+  - [Export Formats](#export-formats)
+  - [Querying the Dependency Graph](#querying-the-dependency-graph)
+  - [MCP Server Mode](#mcp-server-mode)
+  - [Example](#example)
+- [What Gets Analyzed](#what-gets-analyzed)
+- [License](#license)
+
 ## Installation
 
 Install as a .NET tool:
@@ -16,6 +28,13 @@ Or install from source:
 git clone https://github.com/AdamTovatt/type-dependencies.git
 cd type-dependencies
 dotnet build
+dotnet tool install -g --add-source "./TypeDependencies.Cli/bin/Debug" TypeDependencies
+```
+
+**Uninstall:**
+
+```bash
+dotnet tool uninstall -g TypeDependencies
 ```
 
 ## Usage
@@ -166,7 +185,9 @@ Add to your MCP client configuration (e.g., Cursor IDE):
 ```json
 {
   "mcpServers": {
-    "typedependencies": {
+    "type-dep": {
+      "name": "TypeDependencies MCP Server",
+      "stdio": true,
       "command": "type-dep",
       "args": ["--mcp"]
     }
