@@ -41,17 +41,16 @@ namespace TypeDependencies.Tests.Analysis
             // Analyze the Core library itself
             string coreDllPath = Path.Combine(
                 AppContext.BaseDirectory,
-                "..", "..", "..", "..", "..", "TypeDependencies.Core", "bin", "Debug", "net8.0", "TypeDependencies.Core.dll");
+                "..", "..", "..", "..", "TypeDependencies.Core", "bin", "Debug", "net8.0", "TypeDependencies.Core.dll");
             coreDllPath = Path.GetFullPath(coreDllPath);
 
-            if (File.Exists(coreDllPath))
-            {
-                DependencyGraph graph = analyzer.AnalyzeAssembly(coreDllPath);
+            File.Exists(coreDllPath).Should().BeTrue($"Core library DLL should exist at: {coreDllPath}");
 
-                graph.Should().NotBeNull();
-                // Should have at least some dependencies
-                graph.Dependencies.Count.Should().BeGreaterThan(0);
-            }
+            DependencyGraph graph = analyzer.AnalyzeAssembly(coreDllPath);
+
+            graph.Should().NotBeNull();
+            // Should have at least some dependencies
+            graph.Dependencies.Count.Should().BeGreaterThan(0);
         }
     }
 }
