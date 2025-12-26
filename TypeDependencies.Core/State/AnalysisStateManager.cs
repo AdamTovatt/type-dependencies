@@ -1,4 +1,5 @@
 using System.Text.Json;
+using TypeDependencies.Core.Models;
 
 namespace TypeDependencies.Core.State
 {
@@ -80,6 +81,63 @@ namespace TypeDependencies.Core.State
 
             string stateFilePath = GetStateFilePath(sessionId);
             return File.Exists(stateFilePath);
+        }
+
+        public void SaveGeneratedGraph(string sessionId, DependencyGraph graph)
+        {
+            if (string.IsNullOrWhiteSpace(sessionId))
+                throw new ArgumentException("Session ID cannot be null or empty.", nameof(sessionId));
+
+            if (graph == null)
+                throw new ArgumentNullException(nameof(graph));
+
+            AnalysisState state = LoadState(sessionId);
+
+            // Convert DependencyGraph to Dictionary<string, List<string>> for serialization
+            Dictionary<string, List<string>> graphData = new Dictionary<string, List<string>>();
+            foreach (KeyValuePair<string, HashSet<string>> entry in graph.Dependencies)
+            {
+                graphData[entry.Key] = entry.Value.OrderBy(x => x).ToList();
+            }
+
+            state.GeneratedGraph = graphData;
+            SaveState(state);
+        }
+
+        public DependencyGraph? GetGeneratedGraph(string sessionId)
+        {
+            if (string.IsNullOrWhiteSpace(sessionId))
+                throw new ArgumentException("Session ID cannot be null or empty.", nameof(sessionId));
+
+            AnalysisState state = LoadState(sessionId);
+
+            if (state.GeneratedGraph == null)
+                return null;
+
+            // Convert Dictionary<string, List<string>> back to DependencyGraph
+            DependencyGraph graph = new DependencyGraph();
+            foreach (KeyValuePair<string, List<string>> entry in state.GeneratedGraph)
+            {
+                graph.AddDependencies(entry.Key, entry.Value);
+            }
+
+            return graph;
+        }
+
+        public bool HasGeneratedGraph(string sessionId)
+        {
+            if (string.IsNullOrWhiteSpace(sessionId))
+                return false;
+
+            try
+            {
+                AnalysisState state = LoadState(sessionId);
+                return state.GeneratedGraph != null && state.GeneratedGraph.Count > 0;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private string GetStateFilePath(string sessionId)

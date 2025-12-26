@@ -6,13 +6,19 @@ namespace TypeDependencies.Cli.Commands
     public class AddCommand
     {
         private readonly IAnalysisStateManager _stateManager;
+        private readonly ICurrentSessionFinder _sessionFinder;
 
-        public AddCommand(IAnalysisStateManager stateManager)
+        public AddCommand(
+            IAnalysisStateManager stateManager,
+            ICurrentSessionFinder sessionFinder)
         {
             _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
+            _sessionFinder = sessionFinder ?? throw new ArgumentNullException(nameof(sessionFinder));
         }
 
-        public static Command Create(IAnalysisStateManager stateManager)
+        public static Command Create(
+            IAnalysisStateManager stateManager,
+            ICurrentSessionFinder sessionFinder)
         {
             Argument<string> dllPathArgument = new Argument<string>("dll-path")
             {
@@ -24,7 +30,7 @@ namespace TypeDependencies.Cli.Commands
 
             command.SetAction((parseResult, cancellationToken) =>
             {
-                AddCommand handler = new AddCommand(stateManager);
+                AddCommand handler = new AddCommand(stateManager, sessionFinder);
                 return handler.HandleAsync(parseResult, cancellationToken);
             });
 
@@ -52,7 +58,7 @@ namespace TypeDependencies.Cli.Commands
 
             // Try to find the current session ID from environment or state files
             // For now, we'll use a simple approach: look for the most recent session file
-            string? sessionId = FindCurrentSessionId();
+            string? sessionId = _sessionFinder.FindCurrentSessionId();
 
             if (sessionId == null)
             {
@@ -71,33 +77,6 @@ namespace TypeDependencies.Cli.Commands
                 Console.Error.WriteLine($"Error adding DLL: {ex.Message}");
                 return Task.FromResult(1);
             }
-        }
-
-        private string? FindCurrentSessionId()
-        {
-            string tempDirectory = Path.GetTempPath();
-            string[] stateFiles = Directory.GetFiles(tempDirectory, "typedep-*.json");
-
-            if (stateFiles.Length == 0)
-                return null;
-
-            // Get the most recently modified file
-            FileInfo? mostRecent = stateFiles
-                .Select(f => new FileInfo(f))
-                .OrderByDescending(f => f.LastWriteTime)
-                .FirstOrDefault();
-
-            if (mostRecent == null)
-                return null;
-
-            // Extract session ID from filename: typedep-{guid}.json
-            string fileName = Path.GetFileNameWithoutExtension(mostRecent.Name);
-            if (fileName.StartsWith("typedep-", StringComparison.OrdinalIgnoreCase))
-            {
-                return fileName.Substring("typedep-".Length);
-            }
-
-            return null;
         }
     }
 }

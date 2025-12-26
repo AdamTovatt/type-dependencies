@@ -1,31 +1,30 @@
 using System.CommandLine;
-using TypeDependencies.Core.Analysis;
 using TypeDependencies.Core.Export;
 using TypeDependencies.Core.Models;
 using TypeDependencies.Core.State;
 
 namespace TypeDependencies.Cli.Commands
 {
-    public class FinalizeCommand
+    public class ExportCommand
     {
         private readonly IAnalysisStateManager _stateManager;
-        private readonly ITypeAnalyzer _typeAnalyzer;
         private readonly IExportStrategy _defaultExportStrategy;
+        private readonly ICurrentSessionFinder _sessionFinder;
 
-        public FinalizeCommand(
+        public ExportCommand(
             IAnalysisStateManager stateManager,
-            ITypeAnalyzer typeAnalyzer,
-            IExportStrategy defaultExportStrategy)
+            IExportStrategy defaultExportStrategy,
+            ICurrentSessionFinder sessionFinder)
         {
             _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
-            _typeAnalyzer = typeAnalyzer ?? throw new ArgumentNullException(nameof(typeAnalyzer));
             _defaultExportStrategy = defaultExportStrategy ?? throw new ArgumentNullException(nameof(defaultExportStrategy));
+            _sessionFinder = sessionFinder ?? throw new ArgumentNullException(nameof(sessionFinder));
         }
 
         public static Command Create(
             IAnalysisStateManager stateManager,
-            ITypeAnalyzer typeAnalyzer,
-            IExportStrategy defaultExportStrategy)
+            IExportStrategy defaultExportStrategy,
+            ICurrentSessionFinder sessionFinder)
         {
             Option<string> formatOption = new Option<string>(
                 name: "format",
@@ -41,13 +40,13 @@ namespace TypeDependencies.Cli.Commands
                 Description = "Output file path",
             };
 
-            Command command = new Command("finalize", "Analyze all DLLs and export the dependency graph");
+            Command command = new Command("export", "Export the generated dependency graph");
             command.Options.Add(formatOption);
             command.Options.Add(outputOption);
 
             command.SetAction((parseResult, cancellationToken) =>
             {
-                FinalizeCommand handler = new FinalizeCommand(stateManager, typeAnalyzer, defaultExportStrategy);
+                ExportCommand handler = new ExportCommand(stateManager, defaultExportStrategy, sessionFinder);
                 return handler.HandleAsync(parseResult, cancellationToken);
             });
 
@@ -71,40 +70,19 @@ namespace TypeDependencies.Cli.Commands
             format ??= "dot";
 
             // Find current session
-            string? sessionId = FindCurrentSessionId();
+            string? sessionId = _sessionFinder.FindCurrentSessionId();
             if (sessionId == null)
             {
                 Console.Error.WriteLine("Error: No active session found. Please run 'type-dep init' first.");
                 return Task.FromResult(1);
             }
 
-            IReadOnlyList<string> dllPaths = _stateManager.GetDllPaths(sessionId);
-            if (dllPaths.Count == 0)
+            // Load generated graph
+            DependencyGraph? graph = _stateManager.GetGeneratedGraph(sessionId);
+            if (graph == null)
             {
-                Console.Error.WriteLine("Error: No DLLs added to the session. Please run 'type-dep add <dll-path>' first.");
+                Console.Error.WriteLine("Error: No generated graph found. Please run 'type-dep generate' first.");
                 return Task.FromResult(1);
-            }
-
-            // Analyze all DLLs
-            DependencyGraph combinedGraph = new DependencyGraph();
-            foreach (string dllPath in dllPaths)
-            {
-                try
-                {
-                    Console.WriteLine($"Analyzing: {dllPath}");
-                    DependencyGraph graph = _typeAnalyzer.AnalyzeAssembly(dllPath);
-
-                    // Merge graphs
-                    foreach (KeyValuePair<string, HashSet<string>> entry in graph.Dependencies)
-                    {
-                        combinedGraph.AddDependencies(entry.Key, entry.Value);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine($"Error analyzing {dllPath}: {ex.Message}");
-                    return Task.FromResult(1);
-                }
             }
 
             // Determine output path
@@ -131,12 +109,8 @@ namespace TypeDependencies.Cli.Commands
 
             try
             {
-                exportStrategy.Export(combinedGraph, outputPath);
+                exportStrategy.Export(graph, outputPath);
                 Console.WriteLine($"Dependency graph exported to: {outputPath}");
-
-                // Clean up session
-                _stateManager.ClearSession(sessionId);
-
                 return Task.FromResult(0);
             }
             catch (Exception ex)
@@ -144,33 +118,6 @@ namespace TypeDependencies.Cli.Commands
                 Console.Error.WriteLine($"Error exporting dependency graph: {ex.Message}");
                 return Task.FromResult(1);
             }
-        }
-
-        private string? FindCurrentSessionId()
-        {
-            string tempDirectory = Path.GetTempPath();
-            string[] stateFiles = Directory.GetFiles(tempDirectory, "typedep-*.json");
-
-            if (stateFiles.Length == 0)
-                return null;
-
-            // Get the most recently modified file
-            FileInfo? mostRecent = stateFiles
-                .Select(f => new FileInfo(f))
-                .OrderByDescending(f => f.LastWriteTime)
-                .FirstOrDefault();
-
-            if (mostRecent == null)
-                return null;
-
-            // Extract session ID from filename: typedep-{guid}.json
-            string fileName = Path.GetFileNameWithoutExtension(mostRecent.Name);
-            if (fileName.StartsWith("typedep-", StringComparison.OrdinalIgnoreCase))
-            {
-                return fileName.Substring("typedep-".Length);
-            }
-
-            return null;
         }
     }
 }

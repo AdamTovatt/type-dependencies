@@ -1,3 +1,5 @@
+using TypeDependencies.Core.Models;
+
 namespace TypeDependencies.Core.State
 {
     public interface IAnalysisStateManager
@@ -7,6 +9,9 @@ namespace TypeDependencies.Core.State
         IReadOnlyList<string> GetDllPaths(string sessionId);
         void ClearSession(string sessionId);
         bool SessionExists(string sessionId);
+        void SaveGeneratedGraph(string sessionId, DependencyGraph graph);
+        DependencyGraph? GetGeneratedGraph(string sessionId);
+        bool HasGeneratedGraph(string sessionId);
     }
 }
 
