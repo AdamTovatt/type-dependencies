@@ -86,4 +86,4 @@ System and Microsoft namespaces are automatically filtered out to focus on your 
 
 ## License
 
-Adam Tovatt
+GPL-3.0

@@ -17,7 +17,6 @@
     <RepositoryUrl>https://github.com/AdamTovatt/type-dependencies</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>dotnet;cli;dependencies;analysis;mono-cecil;csharp</PackageTags>
-    <Copyright>Copyright © Adam Tovatt</Copyright>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
