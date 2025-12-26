@@ -24,6 +24,7 @@ namespace TypeDependencies.Cli
             rootCommand.Subcommands.Add(AddCommand.Create(stateManager, sessionFinder));
             rootCommand.Subcommands.Add(GenerateCommand.Create(stateManager, typeAnalyzer, sessionFinder));
             rootCommand.Subcommands.Add(ExportCommand.Create(stateManager, defaultExportStrategy, sessionFinder));
+            rootCommand.Subcommands.Add(QueryCommand.Create(stateManager, sessionFinder));
 
             return rootCommand.Parse(args).Invoke();
         }

@@ -91,6 +91,32 @@ type-dep export --format mermaid --output graph.mmd
 type-dep export --format html --output graph.html
 ```
 
+### Querying the Dependency Graph
+
+After generating the dependency graph, you can query it to find specific information:
+
+**Find types that depend on a specific type:**
+```bash
+type-dep query dependents-of MyNamespace.MyType
+```
+
+**Find types that a specific type depends on:**
+```bash
+type-dep query dependencies-of MyNamespace.MyType
+```
+
+**Filter types by dependent count:**
+```bash
+type-dep query dependents 0          # Types with exactly 0 dependents
+type-dep query dependents >5         # Types with more than 5 dependents
+type-dep query dependents >=3        # Types with 3 or more dependents
+type-dep query dependents <2         # Types with less than 2 dependents
+type-dep query dependents <=1        # Types with 1 or fewer dependents
+type-dep query dependents 2-10       # Types with between 2 and 10 dependents (inclusive)
+```
+
+All query results are output one type per line, sorted alphabetically.
+
 ### Example
 
 ```bash
