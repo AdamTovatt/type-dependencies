@@ -56,12 +56,17 @@ type-dep finalize --format dot
 type-dep finalize --format json
 ```
 
+**Mermaid format:**
+```bash
+type-dep finalize --format mermaid
+```
+
 **Custom output path:**
 ```bash
 type-dep finalize --output my-dependencies.json
 ```
 
-By default, the output file is saved to the current working directory as `type-dependencies.dot` (or `type-dependencies.json` for JSON format).
+By default, the output file is saved to the current working directory as `type-dependencies.dot` (or `type-dependencies.json` for JSON format, or `type-dependencies.mmd` for Mermaid format).
 
 ### Example
 

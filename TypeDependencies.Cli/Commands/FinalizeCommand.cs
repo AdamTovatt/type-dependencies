@@ -31,7 +31,7 @@ namespace TypeDependencies.Cli.Commands
                 name: "format",
                 aliases: new[] { "--format", "-f" })
             {
-                Description = "Output format (dot or json)",
+                Description = "Output format (dot, json, or mermaid)",
             };
 
             Option<string> outputOption = new Option<string>(
@@ -110,14 +110,22 @@ namespace TypeDependencies.Cli.Commands
             // Determine output path
             if (string.IsNullOrWhiteSpace(outputPath))
             {
-                string extension = format.ToLowerInvariant() == "json" ? "json" : "dot";
+                string extension = format.ToLowerInvariant() switch
+                {
+                    "json" => "json",
+                    "mermaid" => "mmd",
+                    _ => "dot"
+                };
                 outputPath = Path.Combine(Directory.GetCurrentDirectory(), $"type-dependencies.{extension}");
             }
 
             // Select export strategy
-            IExportStrategy exportStrategy = format.ToLowerInvariant() == "json"
-                ? new JsonExportStrategy()
-                : _defaultExportStrategy;
+            IExportStrategy exportStrategy = format.ToLowerInvariant() switch
+            {
+                "json" => new JsonExportStrategy(),
+                "mermaid" => new MermaidExportStrategy(),
+                _ => _defaultExportStrategy
+            };
 
             try
             {
