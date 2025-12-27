@@ -6,16 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="Resources\HtmlTemplate.html" />
-  </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\HtmlTemplate.html" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="EasyReasy" Version="1.0.2" />
     <PackageReference Include="Mono.Cecil" Version="0.11.5" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>

@@ -1,6 +1,6 @@
 # TypeDependencies
 
-A command-line tool for analyzing and visualizing type dependencies in C# assemblies. Extract dependency graphs from compiled DLLs and export them in DOT (Graphviz), JSON, Mermaid, or HTML format. Works as both a CLI tool and an MCP (Model Context Protocol) server for AI agents.
+A command-line tool for analyzing and visualizing type dependencies in C# assemblies. Extract dependency graphs from compiled DLLs and export them in DOT (Graphviz), JSON, or Mermaid format. Works as both a CLI tool and an MCP (Model Context Protocol) server for AI agents.
 
 ## Table of Contents
 
@@ -87,19 +87,12 @@ type-dep export --format json
 type-dep export --format mermaid
 ```
 
-**HTML format:**
-```bash
-type-dep export --format html
-```
-
-This creates an interactive HTML visualization that can be opened in any web browser.
-
 **Custom output path:**
 ```bash
 type-dep export --output my-dependencies.json
 ```
 
-By default, the output file is saved to the current working directory as `type-dependencies.dot` (or `type-dependencies.json` for JSON format, `type-dependencies.mmd` for Mermaid format, or `type-dependencies.html` for HTML format).
+By default, the output file is saved to the current working directory as `type-dependencies.dot` (or `type-dependencies.json` for JSON format, `type-dependencies.mmd` for Mermaid format).
 
 **Multiple exports:** Since the graph is generated once and stored, you can export it multiple times in different formats:
 ```bash
@@ -107,7 +100,6 @@ type-dep generate
 type-dep export --format dot --output graph.dot
 type-dep export --format json --output graph.json
 type-dep export --format mermaid --output graph.mmd
-type-dep export --format html --output graph.html
 ```
 
 ### Querying the Dependency Graph
@@ -210,7 +202,7 @@ When running as an MCP server, the following tools are available:
 
 **Export:**
 - `td_export(format?: string, outputPath?: string)` - Export the generated graph
-  - `format`: "dot", "json", "mermaid", or "html" (defaults to "dot")
+  - `format`: "dot", "json", or "mermaid" (defaults to "dot")
   - `outputPath`: Optional file path (defaults to `type-dependencies.{ext}` in current directory)
 
 **Query Tools:**

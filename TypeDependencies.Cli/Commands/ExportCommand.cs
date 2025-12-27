@@ -30,7 +30,7 @@ namespace TypeDependencies.Cli.Commands
                 name: "format",
                 aliases: new[] { "--format", "-f" })
             {
-                Description = "Output format (dot, json, mermaid, or html)",
+                Description = "Output format (dot, json, or mermaid)",
             };
 
             Option<string> outputOption = new Option<string>(
@@ -92,7 +92,6 @@ namespace TypeDependencies.Cli.Commands
                 {
                     "json" => "json",
                     "mermaid" => "mmd",
-                    "html" => "html",
                     _ => "dot"
                 };
                 outputPath = Path.Combine(Directory.GetCurrentDirectory(), $"type-dependencies.{extension}");
@@ -103,7 +102,6 @@ namespace TypeDependencies.Cli.Commands
             {
                 "json" => new JsonExportStrategy(),
                 "mermaid" => new MermaidExportStrategy(),
-                "html" => new HtmlExportStrategy(),
                 _ => _defaultExportStrategy
             };
 

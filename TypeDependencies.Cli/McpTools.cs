@@ -138,7 +138,7 @@ namespace TypeDependencies.Cli
         [McpServerTool(Name = "td_export")]
         [Description("Export the generated dependency graph")]
         public Task<string> ExportGraphAsync(
-            [Description("Output format (dot, json, mermaid, or html). Defaults to dot.")]
+            [Description("Output format (dot, json, or mermaid). Defaults to dot.")]
             string? format,
             [Description("Output file path. If not provided, defaults to type-dependencies.{ext} in current directory.")]
             string? outputPath,
@@ -165,7 +165,6 @@ namespace TypeDependencies.Cli
                 {
                     "json" => "json",
                     "mermaid" => "mmd",
-                    "html" => "html",
                     _ => "dot"
                 };
                 outputPath = Path.Combine(Directory.GetCurrentDirectory(), $"type-dependencies.{extension}");
@@ -176,7 +175,6 @@ namespace TypeDependencies.Cli
             {
                 "json" => new JsonExportStrategy(),
                 "mermaid" => new MermaidExportStrategy(),
-                "html" => new HtmlExportStrategy(),
                 _ => _defaultExportStrategy
             };
 
@@ -466,12 +464,12 @@ EXPORT:
   td_export(format?: string, outputPath?: string)
     Export the generated dependency graph to a file.
     Parameters:
-      - format: Output format - ""dot"", ""json"", ""mermaid"", or ""html"" (defaults to ""dot"")
+      - format: Output format - ""dot"", ""json"", or ""mermaid"" (defaults to ""dot"")
       - outputPath: Optional file path (defaults to type-dependencies.{ext} in current directory)
     Returns: Success message with file path or error message.
     Examples:
       td_export(""json"", ""dependencies.json"")
-      td_export(""html"")  // Uses default path: type-dependencies.html
+      td_export(""mermaid"")  // Uses default path: type-dependencies.mmd
 
 QUERY TOOLS:
   td_query_dependents_of(typeName: string)

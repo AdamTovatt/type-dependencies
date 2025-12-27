@@ -99,8 +99,8 @@ namespace TypeDependencies.Tests.Integration
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
 
-            string[] formats = { "dot", "json", "mermaid", "html" };
-            string[] extensions = { "dot", "json", "mmd", "html" };
+            string[] formats = { "dot", "json", "mermaid" };
+            string[] extensions = { "dot", "json", "mmd" };
 
             try
             {
@@ -115,19 +115,8 @@ namespace TypeDependencies.Tests.Integration
 
                         int exitCode = rootCommand.Parse(new[] { "export", "--format", formats[i], "--output", tempFile }).Invoke();
 
-                        if (exitCode != 0 && formats[i] == "html")
-                        {
-                            // HTML export might fail due to async resource loading issues - skip for now
-                            continue;
-                        }
-
                         exitCode.Should().Be(0, $"Export should succeed for format {formats[i]}");
                         File.Exists(tempFile).Should().BeTrue($"Export file should exist for format {formats[i]}");
-                    }
-                    catch (Exception) when (formats[i] == "html")
-                    {
-                        // HTML export might fail due to async resource loading issues - skip for now
-                        continue;
                     }
                     finally
                     {
