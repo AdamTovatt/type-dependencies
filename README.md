@@ -97,6 +97,13 @@ type-dep add path/to/your/assembly.dll
 type-dep add path/to/another/assembly.dll
 ```
 
+**Suggest DLL files based on .csproj files:**
+```bash
+type-dep suggest                    # Search current directory
+type-dep suggest --directory ./src  # Search specific directory
+```
+This command recursively searches for .csproj files and suggests matching .dll files with the same name. Output format: `ProjectName -> FullDllPath`.
+
 **Generate the dependency graph:**
 ```bash
 type-dep generate
@@ -136,6 +143,10 @@ type-dep init
 type-dep add MyProject/bin/Debug/net8.0/MyProject.dll
 type-dep generate
 type-dep export --format json --output dependencies.json
+
+# Discover DLL files automatically
+type-dep suggest                    # Find DLLs based on .csproj files
+type-dep suggest --directory ./src  # Search in specific directory
 
 # Export in multiple formats
 type-dep generate

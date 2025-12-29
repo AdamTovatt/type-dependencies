@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TypeDependencies.Cli.Commands;
+using TypeDependencies.Cli.Suggest;
 using TypeDependencies.Core.Analysis;
 using TypeDependencies.Core.Export;
 using TypeDependencies.Core.State;
@@ -44,6 +45,7 @@ namespace TypeDependencies.Cli
                 ITypeAnalyzer typeAnalyzer = serviceProvider.GetRequiredService<ITypeAnalyzer>();
                 IExportStrategy defaultExportStrategy = serviceProvider.GetRequiredService<IExportStrategy>();
                 ICurrentSessionFinder sessionFinder = serviceProvider.GetRequiredService<ICurrentSessionFinder>();
+                IDllSuggester dllSuggester = serviceProvider.GetRequiredService<IDllSuggester>();
 
                 // Create root command
                 RootCommand rootCommand = new RootCommand("Type dependency analyzer for C# assemblies");
@@ -54,6 +56,7 @@ namespace TypeDependencies.Cli
                 rootCommand.Subcommands.Add(GenerateCommand.Create(stateManager, typeAnalyzer, sessionFinder));
                 rootCommand.Subcommands.Add(ExportCommand.Create(stateManager, defaultExportStrategy, sessionFinder));
                 rootCommand.Subcommands.Add(QueryCommand.Create(stateManager, sessionFinder));
+                rootCommand.Subcommands.Add(SuggestCommand.Create(dllSuggester));
 
                 return await rootCommand.Parse(args).InvokeAsync();
             }
@@ -108,6 +111,7 @@ namespace TypeDependencies.Cli
             services.AddSingleton<ITypeAnalyzer, TypeAnalyzer>();
             services.AddSingleton<IExportStrategy, DotExportStrategy>();
             services.AddSingleton<ICurrentSessionFinder, CurrentSessionFinder>();
+            services.AddSingleton<IDllSuggester, DllSuggester>();
         }
     }
 }
