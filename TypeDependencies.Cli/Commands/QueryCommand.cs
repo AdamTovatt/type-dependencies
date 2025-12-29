@@ -55,8 +55,15 @@ namespace TypeDependencies.Cli.Commands
             {
                 Description = "Count expression (e.g., 5, >5, >=5, <5, <=5, 2-10)",
             };
+            Option<bool> detailedOption = new Option<bool>(
+                name: "detailed",
+                aliases: new[] { "--detailed", "-d" })
+            {
+                Description = "Show detailed output with additional count information",
+            };
             Command dependentsCommand = new Command("dependents", "Find types with a specific dependent count");
             dependentsCommand.Arguments.Add(dependentsArgument);
+            dependentsCommand.Options.Add(detailedOption);
             dependentsCommand.SetAction((parseResult, cancellationToken) =>
             {
                 QueryCommand handler = new QueryCommand(stateManager, sessionFinder);
@@ -70,6 +77,7 @@ namespace TypeDependencies.Cli.Commands
             };
             Command dependenciesCommand = new Command("dependencies", "Find types with a specific dependency count");
             dependenciesCommand.Arguments.Add(dependenciesArgument);
+            dependenciesCommand.Options.Add(detailedOption);
             dependenciesCommand.SetAction((parseResult, cancellationToken) =>
             {
                 QueryCommand handler = new QueryCommand(stateManager, sessionFinder);
@@ -217,6 +225,9 @@ namespace TypeDependencies.Cli.Commands
                 return Task.FromResult(1);
             }
 
+            Option<bool>? detailedOption = parseResult.CommandResult.Command.Options.OfType<Option<bool>>().FirstOrDefault(o => o.Name == "detailed");
+            bool isDetailed = detailedOption != null && parseResult.GetValue(detailedOption);
+
             DependencyGraph? graph = LoadGraph();
             if (graph == null)
                 return Task.FromResult(1);
@@ -236,9 +247,25 @@ namespace TypeDependencies.Cli.Commands
                 return Task.FromResult(0);
             }
 
-            foreach (string typeName in result.Where(x => !IsAnonymousType(x)).OrderBy(x => x))
+            IEnumerable<string> filteredResult = result.Where(x => !IsAnonymousType(x));
+
+            if (isDetailed)
             {
-                Console.WriteLine(typeName);
+                foreach (string typeName in filteredResult
+                    .OrderBy(type => executor.GetDependentCount(type))
+                    .ThenBy(type => executor.GetDependencyCount(type))
+                    .ThenBy(type => type))
+                {
+                    int dependencyCount = executor.GetDependencyCount(typeName);
+                    Console.WriteLine($"{typeName} ({dependencyCount} dependencies)");
+                }
+            }
+            else
+            {
+                foreach (string typeName in filteredResult.OrderBy(x => x))
+                {
+                    Console.WriteLine(typeName);
+                }
             }
 
             return Task.FromResult(0);
@@ -328,6 +355,9 @@ namespace TypeDependencies.Cli.Commands
                 return Task.FromResult(1);
             }
 
+            Option<bool>? detailedOption = parseResult.CommandResult.Command.Options.OfType<Option<bool>>().FirstOrDefault(o => o.Name == "detailed");
+            bool isDetailed = detailedOption != null && parseResult.GetValue(detailedOption);
+
             DependencyGraph? graph = LoadGraph();
             if (graph == null)
                 return Task.FromResult(1);
@@ -347,9 +377,25 @@ namespace TypeDependencies.Cli.Commands
                 return Task.FromResult(0);
             }
 
-            foreach (string typeName in result.Where(x => !IsAnonymousType(x)).OrderBy(x => x))
+            IEnumerable<string> filteredResult = result.Where(x => !IsAnonymousType(x));
+
+            if (isDetailed)
             {
-                Console.WriteLine(typeName);
+                foreach (string typeName in filteredResult
+                    .OrderBy(type => executor.GetDependencyCount(type))
+                    .ThenBy(type => executor.GetDependentCount(type))
+                    .ThenBy(type => type))
+                {
+                    int dependentCount = executor.GetDependentCount(typeName);
+                    Console.WriteLine($"{typeName} ({dependentCount} dependents)");
+                }
+            }
+            else
+            {
+                foreach (string typeName in filteredResult.OrderBy(x => x))
+                {
+                    Console.WriteLine(typeName);
+                }
             }
 
             return Task.FromResult(0);

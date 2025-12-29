@@ -399,7 +399,7 @@ namespace TypeDependencies.Core.Query
             currentPath.RemoveAt(currentPath.Count - 1);
         }
 
-        private int GetDependencyCount(string typeName)
+        public int GetDependencyCount(string typeName)
         {
             if (string.IsNullOrWhiteSpace(typeName))
                 return 0;

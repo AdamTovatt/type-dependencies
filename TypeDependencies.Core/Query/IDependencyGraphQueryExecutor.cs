@@ -3,6 +3,7 @@ namespace TypeDependencies.Core.Query
     public interface IDependencyGraphQueryExecutor
     {
         int GetDependentCount(string typeName);
+        int GetDependencyCount(string typeName);
         HashSet<string> GetTypesWithNoDependents();
         HashSet<string> GetDependentsOf(string typeName);
         IReadOnlySet<string>? GetDependenciesOf(string typeName);

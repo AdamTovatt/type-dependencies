@@ -159,6 +159,7 @@ type-dep export --format mermaid --output graph.mmd
 type-dep generate
 type-dep query dependents-of MyNamespace.MyType
 type-dep query dependencies 0          # Find leaf nodes
+type-dep query dependencies 0 --detailed  # Find leaf nodes with dependent counts
 type-dep query circular-dependencies   # Detect cycles
 ```
 
@@ -226,6 +227,13 @@ type-dep query dependencies <=1        # Types with 1 or fewer dependencies
 type-dep query dependencies 2-10       # Types with between 2 and 10 dependencies (inclusive)
 ```
 
+**Show detailed output with additional count information:**
+```bash
+type-dep query dependencies 0 --detailed    # Shows dependent counts: TypeName (N dependents)
+type-dep query dependents 0 --detailed      # Shows dependency counts: TypeName (N dependencies)
+```
+When using `--detailed`, results are sorted by: dependency count → dependent count → name (all ascending). This makes it easy to identify types that are completely isolated (0 dependencies and 0 dependents) at a glance.
+
 **Find transitive dependencies (recursive):**
 ```bash
 type-dep query transitive-dependencies-of MyNamespace.MyType
@@ -244,7 +252,7 @@ type-dep query circular-dependencies
 ```
 This finds and lists all circular dependency cycles in the graph. Each cycle is displayed as a chain of type names connected by arrows (e.g., `TypeA -> TypeB -> TypeC -> TypeA`).
 
-All query results are output one type per line, sorted alphabetically (except circular dependencies which show the cycle path).
+All query results are output one type per line, sorted alphabetically by default (except circular dependencies which show the cycle path). When using the `--detailed` flag, results are sorted by dependency count, then dependent count, then alphabetically.
 
 **Note:** Compiler-generated types (names starting with `<`) are automatically filtered out from query results.
 
@@ -337,7 +345,13 @@ type-dep query dependents-of MyNamespace.MyType
 - **Zero dependencies** (they don't depend on anything)
 - **Zero dependents** (nothing depends on them)
 
-To find these, you can:
+To find these easily, use the `--detailed` flag:
+```bash
+type-dep query dependencies 0 --detailed
+```
+This will show all types with 0 dependencies, sorted by dependent count (ascending), making it easy to spot types with both 0 dependencies and 0 dependents at the top of the list.
+
+Alternatively, you can:
 1. Find types with 0 dependencies: `type-dep query dependencies 0`
 2. For each candidate, check its dependents: `type-dep query dependents-of <TypeName>`
 
@@ -359,7 +373,10 @@ type-dep query dependents 0
 ```
 
 **Find types that are completely isolated (no dependencies AND no dependents):**
-This requires checking both - first find types with 0 dependencies, then check each one's dependents.
+```bash
+type-dep query dependencies 0 --detailed
+```
+The `--detailed` flag shows dependent counts, and results are sorted by dependent count (ascending). Types with 0 dependencies and 0 dependents will appear first in the output, making them easy to identify.
 
 ## Development
 
