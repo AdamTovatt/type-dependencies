@@ -234,6 +234,8 @@ This finds and lists all circular dependency cycles in the graph. Each cycle is 
 
 All query results are output one type per line, sorted alphabetically (except circular dependencies which show the cycle path).
 
+**Note:** Compiler-generated types (names starting with `<`) are automatically filtered out from query results.
+
 ### Available MCP Tools
 
 When running as an MCP server, the following tools are available:

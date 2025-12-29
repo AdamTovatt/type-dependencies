@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Moq;
 using System.CommandLine;
+using System.IO;
 using TypeDependencies.Cli.Commands;
 using TypeDependencies.Core.Models;
 using TypeDependencies.Core.State;
@@ -676,6 +677,49 @@ namespace TypeDependencies.Tests.Integration
 
             exitCode.Should().Be(0);
             stateManager.ClearSession(sessionId);
+        }
+
+        [Fact]
+        public void QueryCommand_Dependents_ShouldFilterAnonymousTypes()
+        {
+            IAnalysisStateManager stateManager = new AnalysisStateManager();
+            string sessionId = stateManager.InitializeSession();
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("<>f__AnonymousType0`1", "TypeB");
+            graph.AddDependency("<Value>j__TPar", "TypeB");
+            graph.AddDependency("<Vector>j__TPar", "TypeB");
+            graph.AddDependency("TypeC", "TypeD");
+            stateManager.SaveGeneratedGraph(sessionId, graph);
+
+            Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
+            sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+
+            Command command = QueryCommand.Create(stateManager, sessionFinderMock.Object);
+            RootCommand rootCommand = new RootCommand();
+            rootCommand.Subcommands.Add(command);
+
+            StringWriter stringWriter = new StringWriter();
+            TextWriter originalOut = Console.Out;
+            Console.SetOut(stringWriter);
+
+            try
+            {
+                int exitCode = rootCommand.Parse(new[] { "query", "dependents", "1" }).Invoke();
+
+                exitCode.Should().Be(0);
+                string output = stringWriter.ToString();
+                output.Should().Contain("TypeD");
+                output.Should().NotContain("<>f__AnonymousType");
+                output.Should().NotContain("<Value>");
+                output.Should().NotContain("<Vector>");
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                stringWriter.Dispose();
+                stateManager.ClearSession(sessionId);
+            }
         }
     }
 }

@@ -150,7 +150,7 @@ namespace TypeDependencies.Cli.Commands
                 return Task.FromResult(0);
             }
 
-            foreach (string dependent in dependents.OrderBy(x => x))
+            foreach (string dependent in dependents.Where(x => !IsAnonymousType(x)).OrderBy(x => x))
             {
                 Console.WriteLine(dependent);
             }
@@ -193,7 +193,7 @@ namespace TypeDependencies.Cli.Commands
                 return Task.FromResult(0);
             }
 
-            foreach (string dependency in dependencies.OrderBy(x => x))
+            foreach (string dependency in dependencies.Where(x => !IsAnonymousType(x)).OrderBy(x => x))
             {
                 Console.WriteLine(dependency);
             }
@@ -236,7 +236,7 @@ namespace TypeDependencies.Cli.Commands
                 return Task.FromResult(0);
             }
 
-            foreach (string typeName in result.OrderBy(x => x))
+            foreach (string typeName in result.Where(x => !IsAnonymousType(x)).OrderBy(x => x))
             {
                 Console.WriteLine(typeName);
             }
@@ -347,7 +347,7 @@ namespace TypeDependencies.Cli.Commands
                 return Task.FromResult(0);
             }
 
-            foreach (string typeName in result.OrderBy(x => x))
+            foreach (string typeName in result.Where(x => !IsAnonymousType(x)).OrderBy(x => x))
             {
                 Console.WriteLine(typeName);
             }
@@ -384,7 +384,7 @@ namespace TypeDependencies.Cli.Commands
                 return Task.FromResult(0);
             }
 
-            foreach (string dependency in transitiveDependencies.OrderBy(x => x))
+            foreach (string dependency in transitiveDependencies.Where(x => !IsAnonymousType(x)).OrderBy(x => x))
             {
                 Console.WriteLine(dependency);
             }
@@ -421,7 +421,7 @@ namespace TypeDependencies.Cli.Commands
                 return Task.FromResult(0);
             }
 
-            foreach (string dependent in transitiveDependents.OrderBy(x => x))
+            foreach (string dependent in transitiveDependents.Where(x => !IsAnonymousType(x)).OrderBy(x => x))
             {
                 Console.WriteLine(dependent);
             }
@@ -446,7 +446,11 @@ namespace TypeDependencies.Cli.Commands
 
             foreach (List<string> cycle in cycles)
             {
-                Console.WriteLine(string.Join(" -> ", cycle));
+                List<string> filteredCycle = cycle.Where(x => !IsAnonymousType(x)).ToList();
+                if (filteredCycle.Count > 0)
+                {
+                    Console.WriteLine(string.Join(" -> ", filteredCycle));
+                }
             }
 
             return Task.FromResult(0);
@@ -537,6 +541,11 @@ namespace TypeDependencies.Cli.Commands
             }
 
             return graph;
+        }
+
+        private static bool IsAnonymousType(string typeName)
+        {
+            return typeName.StartsWith("<", StringComparison.Ordinal);
         }
     }
 }
