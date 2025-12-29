@@ -266,7 +266,9 @@ namespace TypeDependencies.Cli
         public Task<string> QueryDependentsAsync(
             [Description("Count expression (e.g., 5, >5, >=5, <5, <=5, 2-10)")]
             string countExpression,
-            CancellationToken cancellationToken)
+            [Description("Show detailed output with additional count information")]
+            bool detailed = false,
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(countExpression))
             {
@@ -292,7 +294,7 @@ namespace TypeDependencies.Cli
                 return Task.FromResult("No types match the specified criteria.");
             }
 
-            return Task.FromResult(FormatResults(result));
+            return Task.FromResult(FormatResults(result, executor, detailed, isDependenciesQuery: false));
         }
 
         /// <summary>
@@ -303,7 +305,9 @@ namespace TypeDependencies.Cli
         public Task<string> QueryDependenciesAsync(
             [Description("Count expression (e.g., 5, >5, >=5, <5, <=1, or 2-10)")]
             string countExpression,
-            CancellationToken cancellationToken)
+            [Description("Show detailed output with additional count information")]
+            bool detailed = false,
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(countExpression))
             {
@@ -329,7 +333,7 @@ namespace TypeDependencies.Cli
                 return Task.FromResult("No types match the specified criteria.");
             }
 
-            return Task.FromResult(FormatResults(result));
+            return Task.FromResult(FormatResults(result, executor, detailed, isDependenciesQuery: true));
         }
 
         /// <summary>
@@ -480,20 +484,28 @@ QUERY TOOLS:
     Find all types that the specified type depends on.
     Returns: List of type names (one per line) or error message.
 
-  td_query_dependents(countExpression: string)
+  td_query_dependents(countExpression: string, detailed?: bool)
     Filter types by dependent count (how many types depend on them).
     Supports: number, >number, >=number, <number, <=number, or min-max
+    Parameters:
+      - countExpression: Count expression (e.g., ""0"", "">5"", ""2-10"")
+      - detailed: Optional. If true, shows dependency counts and sorts by dependent count, then dependency count, then name
     Examples:
-      td_query_dependents(""0"")      // Types with no dependents
-      td_query_dependents("">5"")      // Types with more than 5 dependents
-      td_query_dependents(""2-10"")    // Types with 2 to 10 dependents
+      td_query_dependents(""0"")           // Types with no dependents
+      td_query_dependents("">5"")          // Types with more than 5 dependents
+      td_query_dependents(""2-10"")        // Types with 2 to 10 dependents
+      td_query_dependents(""0"", true)     // Types with no dependents, showing dependency counts
 
-  td_query_dependencies(countExpression: string)
+  td_query_dependencies(countExpression: string, detailed?: bool)
     Filter types by dependency count (how many types they depend on).
     Supports: number, >number, >=number, <number, <=number, or min-max
+    Parameters:
+      - countExpression: Count expression (e.g., ""0"", "">5"", ""2-10"")
+      - detailed: Optional (but recommended). If true, shows dependent counts and sorts by dependency count, then dependent count, then name
     Examples:
-      td_query_dependencies(""0"")     // Leaf nodes (no dependencies)
-      td_query_dependencies("">10"")   // Highly coupled types
+      td_query_dependencies(""0"")        // Leaf nodes (no dependencies)
+      td_query_dependencies("">10"")      // Highly coupled types
+      td_query_dependencies(""0"", true)  // Leaf nodes, showing dependent counts
 
   td_query_transitive_dependencies_of(typeName: string)
     Find all types that a type depends on (recursively).
@@ -550,7 +562,8 @@ ERROR HANDLING:
 NOTES:
   - Sessions persist until manually cleared or a new session is created
   - After generating, you can export multiple times in different formats
-  - Query results are sorted alphabetically
+  - Query results are sorted alphabetically by default
+  - When using detailed mode, results are sorted by dependency count, then dependent count, then alphabetically
   - System and Microsoft namespaces are automatically filtered out
   - The tool analyzes: base types, interfaces, fields, properties, methods, attributes, and generic constraints
 
@@ -568,14 +581,54 @@ For more information, visit: https://github.com/AdamTovatt/type-dependencies
             return _stateManager.GetGeneratedGraph(sessionId);
         }
 
-        private static string FormatResults(HashSet<string> results)
+        private static string FormatResults(HashSet<string> results, IDependencyGraphQueryExecutor? executor = null, bool detailed = false, bool isDependenciesQuery = false)
         {
-            return string.Join("\n", results.OrderBy(x => x));
+            IEnumerable<string> filteredResult = results.Where(x => !IsAnonymousType(x));
+
+            if (detailed && executor != null)
+            {
+                if (isDependenciesQuery)
+                {
+                    IEnumerable<string> sorted = filteredResult
+                        .OrderBy(type => executor.GetDependencyCount(type))
+                        .ThenBy(type => executor.GetDependentCount(type))
+                        .ThenBy(type => type);
+                    
+                    return string.Join("\n", sorted.Select(typeName =>
+                    {
+                        int dependentCount = executor.GetDependentCount(typeName);
+                        return $"{typeName} ({dependentCount} dependents)";
+                    }));
+                }
+                else
+                {
+                    IEnumerable<string> sorted = filteredResult
+                        .OrderBy(type => executor.GetDependentCount(type))
+                        .ThenBy(type => executor.GetDependencyCount(type))
+                        .ThenBy(type => type);
+                    
+                    return string.Join("\n", sorted.Select(typeName =>
+                    {
+                        int dependencyCount = executor.GetDependencyCount(typeName);
+                        return $"{typeName} ({dependencyCount} dependencies)";
+                    }));
+                }
+            }
+
+            return string.Join("\n", filteredResult.OrderBy(x => x));
+        }
+
+        private static bool IsAnonymousType(string typeName)
+        {
+            return typeName.StartsWith("<", StringComparison.Ordinal);
         }
 
         private static string FormatCircularDependencies(List<List<string>> cycles)
         {
-            return string.Join("\n", cycles.Select(cycle => string.Join(" -> ", cycle)));
+            return string.Join("\n", cycles
+                .Select(cycle => cycle.Where(x => !IsAnonymousType(x)).ToList())
+                .Where(filteredCycle => filteredCycle.Count > 0)
+                .Select(filteredCycle => string.Join(" -> ", filteredCycle)));
         }
 
         private static HashSet<string>? ParseAndExecuteDependentsQuery(IDependencyGraphQueryExecutor executor, string expression)

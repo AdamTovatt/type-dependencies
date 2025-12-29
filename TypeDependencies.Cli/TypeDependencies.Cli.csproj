@@ -12,7 +12,7 @@
     <ToolCommandName>type-dep</ToolCommandName>
     <Description>Command-line tool for analyzing and visualizing type dependencies in C# assemblies. Works as both a CLI tool and MCP server.</Description>
     <PackageId>TypeDependencies</PackageId>
-    <Version>1.3.0</Version>
+    <Version>1.3.1</Version>
     <PackageProjectUrl>https://github.com/AdamTovatt/type-dependencies</PackageProjectUrl>
     <RepositoryUrl>https://github.com/AdamTovatt/type-dependencies</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

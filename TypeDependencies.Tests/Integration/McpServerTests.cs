@@ -239,7 +239,7 @@ namespace TypeDependencies.Tests.Integration
 
             McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
 
-            string result = await mcpTools.QueryDependentsAsync("2", CancellationToken.None);
+            string result = await mcpTools.QueryDependentsAsync("2", detailed: false, CancellationToken.None);
 
             result.Should().Contain("TypeB");
             stateManager.ClearSession(sessionId);
@@ -262,9 +262,57 @@ namespace TypeDependencies.Tests.Integration
 
             McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
 
-            string result = await mcpTools.QueryDependenciesAsync("2", CancellationToken.None);
+            string result = await mcpTools.QueryDependenciesAsync("2", detailed: false, CancellationToken.None);
 
             result.Should().Contain("TypeA");
+            stateManager.ClearSession(sessionId);
+        }
+
+        [Fact]
+        public async Task QueryDependentsAsync_WithDetailed_ShouldShowDependencyCounts()
+        {
+            IAnalysisStateManager stateManager = new AnalysisStateManager();
+            string sessionId = stateManager.InitializeSession();
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeC", "TypeB");
+            stateManager.SaveGeneratedGraph(sessionId, graph);
+
+            ITypeAnalyzer typeAnalyzer = new TypeAnalyzer();
+            IExportStrategy exportStrategy = new DotExportStrategy();
+            Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
+            sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+
+            string result = await mcpTools.QueryDependentsAsync("2", detailed: true, CancellationToken.None);
+
+            result.Should().Contain("TypeB");
+            result.Should().Contain("dependencies");
+            stateManager.ClearSession(sessionId);
+        }
+
+        [Fact]
+        public async Task QueryDependenciesAsync_WithDetailed_ShouldShowDependentCounts()
+        {
+            IAnalysisStateManager stateManager = new AnalysisStateManager();
+            string sessionId = stateManager.InitializeSession();
+            DependencyGraph graph = new DependencyGraph();
+            graph.AddDependency("TypeA", "TypeB");
+            graph.AddDependency("TypeA", "TypeC");
+            stateManager.SaveGeneratedGraph(sessionId, graph);
+
+            ITypeAnalyzer typeAnalyzer = new TypeAnalyzer();
+            IExportStrategy exportStrategy = new DotExportStrategy();
+            Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
+            sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+
+            string result = await mcpTools.QueryDependenciesAsync("2", detailed: true, CancellationToken.None);
+
+            result.Should().Contain("TypeA");
+            result.Should().Contain("dependents");
             stateManager.ClearSession(sessionId);
         }
 
