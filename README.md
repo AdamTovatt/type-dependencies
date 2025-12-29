@@ -7,7 +7,7 @@
 
 A command-line tool for analyzing and visualizing type dependencies in C# assemblies. Extract dependency graphs from compiled DLLs and export them in DOT (Graphviz), JSON, or Mermaid format. Works as both a CLI tool and an MCP (Model Context Protocol) server for AI agents.
 
-**Dependencies** are types that a given type depends on (outgoing), while **dependents** are types that depend on a given type (incoming).
+**Dependencies** are types that a given type depends on (outgoing), while **dependents** are types that depend on a given type (incoming). For more information about this see the section about [Understanding Dependencies vs Dependents and What to Query For](#understanding-dependencies-vs-dependents-and-what-to-query-for).
 
 ### What You Can Do
 
@@ -31,6 +31,7 @@ The tool enables you to answer questions like:
   - [Querying the Dependency Graph](#querying-the-dependency-graph)
   - [Available MCP Tools](#available-mcp-tools)
 - [What Gets Analyzed](#what-gets-analyzed)
+- [Understanding Dependencies vs Dependents and What to Query For](#understanding-dependencies-vs-dependents-and-what-to-query-for)
 - [Development](#development)
 - [License](#license)
 
@@ -288,6 +289,77 @@ The tool extracts dependencies from:
 - Generic type constraints
 
 System and Microsoft namespaces are automatically filtered out to focus on your application code.
+
+## Understanding Dependencies vs Dependents and What to Query For
+
+The distinction between **dependencies** and **dependents** can be confusing at first. Here's a clear explanation with practical examples:
+
+### The Basic Concept
+
+- **Dependencies** (outgoing): Types that a given type **depends on** (what it uses/requires)
+- **Dependents** (incoming): Types that **depend on** a given type (what uses/requires it)
+
+### A Concrete Example
+
+Imagine you have three types:
+- `OrderService` - uses `Order` and `PaymentProcessor`
+- `Order` - a simple data class
+- `PaymentProcessor` - handles payments
+
+In this scenario:
+- `OrderService` **has dependencies on**: `Order` and `PaymentProcessor` (it uses them)
+- `Order` **has a dependent**: `OrderService` (something uses it)
+- `PaymentProcessor` **has a dependent**: `OrderService` (something uses it)
+
+### Finding Types You Can Move Easily
+
+When refactoring or reorganizing code, you often want to find types that are easy to move because they don't depend on other types. These are called **leaf nodes** - they have zero outgoing dependencies.
+
+To find these types, use:
+
+```bash
+type-dep query dependencies 0
+```
+
+This command lists all types that have **zero dependencies** - meaning they don't depend on any other types in your codebase. These are typically the easiest to move or refactor because they don't pull in other dependencies.
+
+### Understanding the Full Picture
+
+However, even if a type has zero dependencies, you should also consider its **dependents** (what depends on it). If many types depend on a type, moving it might require updating all those dependents.
+
+To check what depends on a specific type:
+
+```bash
+type-dep query dependents-of MyNamespace.MyType
+```
+
+**The easiest types to move** are those with:
+- **Zero dependencies** (they don't depend on anything)
+- **Zero dependents** (nothing depends on them)
+
+To find these, you can:
+1. Find types with 0 dependencies: `type-dep query dependencies 0`
+2. For each candidate, check its dependents: `type-dep query dependents-of <TypeName>`
+
+### Common Query Patterns
+
+**Find types that are easy to move (no dependencies):**
+```bash
+type-dep query dependencies 0
+```
+
+**Find types that are heavily used (many dependents):**
+```bash
+type-dep query dependents >5
+```
+
+**Find types that are isolated (no dependents):**
+```bash
+type-dep query dependents 0
+```
+
+**Find types that are completely isolated (no dependencies AND no dependents):**
+This requires checking both - first find types with 0 dependencies, then check each one's dependents.
 
 ## Development
 
