@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Moq;
 using TypeDependencies.Cli;
+using TypeDependencies.Cli.Suggest;
 using TypeDependencies.Core.Analysis;
 using TypeDependencies.Core.Export;
 using TypeDependencies.Core.Models;
@@ -17,8 +18,9 @@ namespace TypeDependencies.Tests.Integration
             ITypeAnalyzer typeAnalyzer = new TypeAnalyzer();
             IExportStrategy exportStrategy = new DotExportStrategy();
             ICurrentSessionFinder sessionFinder = new CurrentSessionFinder();
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinder);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinder, dllSuggesterMock.Object);
 
             string result = await mcpTools.InitializeSessionAsync(CancellationToken.None);
 
@@ -33,8 +35,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns((string?)null);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             // Use a path that exists so we can test the session check
             string tempFile = Path.GetTempFileName();
@@ -59,8 +62,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.AddDllAsync(@"C:\NonExistent\File.dll", CancellationToken.None);
 
@@ -76,8 +80,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns((string?)null);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.GenerateGraphAsync(CancellationToken.None);
 
@@ -93,8 +98,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.GenerateGraphAsync(CancellationToken.None);
 
@@ -110,8 +116,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns((string?)null);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.ExportGraphAsync(null, null, CancellationToken.None);
 
@@ -127,8 +134,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.ExportGraphAsync(null, null, CancellationToken.None);
 
@@ -144,8 +152,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns((string?)null);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.QueryDependentsOfAsync("SomeType", CancellationToken.None);
 
@@ -165,8 +174,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.QueryDependentsOfAsync("TypeA", CancellationToken.None);
 
@@ -188,8 +198,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.QueryDependentsOfAsync("TypeB", CancellationToken.None);
 
@@ -212,8 +223,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.QueryDependenciesOfAsync("TypeA", CancellationToken.None);
 
@@ -236,8 +248,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.QueryDependentsAsync("2", detailed: false, CancellationToken.None);
 
@@ -259,8 +272,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.QueryDependenciesAsync("2", detailed: false, CancellationToken.None);
 
@@ -282,8 +296,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.QueryDependentsAsync("2", detailed: true, CancellationToken.None);
 
@@ -306,8 +321,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.QueryDependenciesAsync("2", detailed: true, CancellationToken.None);
 
@@ -330,8 +346,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.QueryTransitiveDependenciesOfAsync("TypeA", CancellationToken.None);
 
@@ -354,8 +371,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.QueryTransitiveDependentsOfAsync("TypeA", CancellationToken.None);
 
@@ -378,8 +396,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.QueryCircularDependenciesAsync(CancellationToken.None);
 
@@ -401,8 +420,9 @@ namespace TypeDependencies.Tests.Integration
             IExportStrategy exportStrategy = new DotExportStrategy();
             Mock<ICurrentSessionFinder> sessionFinderMock = new Mock<ICurrentSessionFinder>();
             sessionFinderMock.Setup(x => x.FindCurrentSessionId()).Returns(sessionId);
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinderMock.Object, dllSuggesterMock.Object);
 
             string result = await mcpTools.QueryCircularDependenciesAsync(CancellationToken.None);
 
@@ -419,8 +439,9 @@ namespace TypeDependencies.Tests.Integration
             ITypeAnalyzer typeAnalyzer = new TypeAnalyzer();
             IExportStrategy exportStrategy = new DotExportStrategy();
             ICurrentSessionFinder sessionFinder = new CurrentSessionFinder();
+            Mock<IDllSuggester> dllSuggesterMock = new Mock<IDllSuggester>();
 
-            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinder);
+            McpTools mcpTools = new McpTools(stateManager, typeAnalyzer, exportStrategy, sessionFinder, dllSuggesterMock.Object);
 
             string result = await mcpTools.GetHelpAsync(CancellationToken.None);
 

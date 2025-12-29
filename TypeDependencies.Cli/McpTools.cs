@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using ModelContextProtocol.Server;
+using TypeDependencies.Cli.Models;
+using TypeDependencies.Cli.Suggest;
 using TypeDependencies.Core.Analysis;
 using TypeDependencies.Core.Export;
 using TypeDependencies.Core.Models;
@@ -18,6 +20,7 @@ namespace TypeDependencies.Cli
         private readonly ITypeAnalyzer _typeAnalyzer;
         private readonly IExportStrategy _defaultExportStrategy;
         private readonly ICurrentSessionFinder _sessionFinder;
+        private readonly IDllSuggester _dllSuggester;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="McpTools"/> class.
@@ -26,12 +29,14 @@ namespace TypeDependencies.Cli
             IAnalysisStateManager stateManager,
             ITypeAnalyzer typeAnalyzer,
             IExportStrategy defaultExportStrategy,
-            ICurrentSessionFinder sessionFinder)
+            ICurrentSessionFinder sessionFinder,
+            IDllSuggester dllSuggester)
         {
             _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
             _typeAnalyzer = typeAnalyzer ?? throw new ArgumentNullException(nameof(typeAnalyzer));
             _defaultExportStrategy = defaultExportStrategy ?? throw new ArgumentNullException(nameof(defaultExportStrategy));
             _sessionFinder = sessionFinder ?? throw new ArgumentNullException(nameof(sessionFinder));
+            _dllSuggester = dllSuggester ?? throw new ArgumentNullException(nameof(dllSuggester));
         }
 
         /// <summary>
@@ -422,6 +427,44 @@ namespace TypeDependencies.Cli
             }
 
             return Task.FromResult(FormatCircularDependencies(cycles));
+        }
+
+        /// <summary>
+        /// Suggest DLL files based on .csproj files found in the directory tree.
+        /// </summary>
+        [McpServerTool(Name = "td_suggest")]
+        [Description("Suggest DLL files based on .csproj files found in the directory tree")]
+        public Task<string> SuggestDllsAsync(
+            [Description("Directory to search for .csproj files (defaults to current directory)")]
+            string? directory,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(directory))
+            {
+                directory = Directory.GetCurrentDirectory();
+            }
+
+            if (!Directory.Exists(directory))
+            {
+                return Task.FromResult($"Error: Directory not found: {directory}");
+            }
+
+            try
+            {
+                IReadOnlyList<DllSuggestion> suggestions = _dllSuggester.SuggestDlls(directory);
+
+                if (suggestions.Count == 0)
+                {
+                    return Task.FromResult("No DLL files found matching .csproj files in the specified directory.");
+                }
+
+                string result = string.Join("\n", suggestions.Select(s => $"{s.ProjectName} -> {s.DllPath}"));
+                return Task.FromResult(result);
+            }
+            catch (Exception ex)
+            {
+                return Task.FromResult($"Error suggesting DLL files: {ex.Message}");
+            }
         }
 
         /// <summary>
