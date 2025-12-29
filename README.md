@@ -69,6 +69,12 @@ If you want it as an MCP tool in for example Cursor, add this to your MCP config
 }
 ```
 
+**For Codex, run the following command:**
+
+```bash
+codex mcp add type-dep -- type-dep --mcp
+```
+
 **Uninstall:**
 ```bash
 dotnet tool uninstall -g TypeDependencies
